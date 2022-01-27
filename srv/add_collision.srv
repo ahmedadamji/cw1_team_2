@@ -1,0 +1,6 @@
+string object_name
+geometry_msgs/Point centre
+geometry_msgs/Vector3 dimensions
+geometry_msgs/Quaternion orientation
+---
+bool success

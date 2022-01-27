@@ -1,0 +1,20 @@
+<launch>
+  <!-- launch with a delay to allow gazebo to load, feel free to edit -->
+  <arg name="launch_delay" value="5.0"/>
+  <!-- load panda model and gazebo parameters -->
+  <include file="$(find panda_description)/launch/description.launch"/>
+  <!-- start the coursework world spawner with a delay -->
+  <include file="$(find cw1_world_spawner)/launch/world_spawner.launch">
+    <arg name="launch_delay" value="$(arg launch_delay)"/>
+  </include>
+
+  <!-- add your own nodes to launch below here -->
+  <!-- node to handle all service callbacks -->
+  <node pkg="cw1_team_2"
+        name="cw1_team_2_node"
+        type="cw1_team_2_node"
+        output="screen"
+  />
+
+  
+</launch>
