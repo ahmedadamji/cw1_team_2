@@ -52,7 +52,6 @@
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Scalar.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-#include <tf2_ros/transform_listener.h>
 
 // PCL specific includes
 #include <pcl_conversions/pcl_conversions.h>
@@ -83,6 +82,7 @@
 #include <cw1_team_2/add_collision.h>
 #include <cw1_team_2/remove_collision.h>
 #include <cw1_team_2/pick.h>
+#include <cw1_world_spawner/Task1Service.h>
 
 
 typedef pcl::PointXYZRGBA PointT;
@@ -158,6 +158,16 @@ class Cw1Solution
     bool 
     pickCallback(cw1_team_2::pick::Request &request,
       cw1_team_2::pick::Response &response);
+
+    /** \brief Service callback function for ............. 
+      *
+      * \input[in] request service request ...............
+      *  
+      * \return true if .....................
+      */
+    bool 
+    task1Callback(cw1_world_spawner::Task1Service::Request &request,
+      cw1_world_spawner::Task1Service::Response &response);
 
     /** \brief MoveIt function for moving the move_group to the target position.
       *
@@ -276,6 +286,9 @@ class Cw1Solution
       
     /* Variables */
 
+    /** \brief Define object and goal locations of objects to manipulate */
+    //geometry_msgs/PoseStamped object_loc;
+
     /** \brief Define some useful constant values */
     std::string base_frame_ = "panda_link0";
     double gripper_open_ = 80e-3;
@@ -295,6 +308,7 @@ class Cw1Solution
     ros::ServiceServer add_collision_srv_;
     ros::ServiceServer remove_collision_srv_;
     ros::ServiceServer pick_srv_;
+    ros::ServiceServer task1_srv_;
 
     /** \brief MoveIt interface to move groups to seperate the arm and the gripper,
       * these are defined in urdf. */

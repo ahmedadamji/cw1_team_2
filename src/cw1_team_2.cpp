@@ -80,6 +80,8 @@ Cw1Solution::Cw1Solution (ros::NodeHandle &nh):
     &Cw1Solution::removeCollisionCallback, this);
   pick_srv_ = g_nh.advertiseService(service_ns + "/pick",
     &Cw1Solution::pickCallback, this);
+  task1_srv_ = g_nh.advertiseService("/task1_start",
+    &Cw1Solution::task1Callback, this);
 
   ROS_INFO("MoveIt! services initialisation finished, namespace: %s", 
     service_ns.c_str());
@@ -160,6 +162,22 @@ Cw1Solution::pickCallback(cw1_team_2::pick::Request &request,
 
   return success;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+
+bool
+Cw1Solution::task1Callback(cw1_world_spawner::Task1Service::Request &request,
+  cw1_world_spawner::Task1Service::Response &response)
+{
+  /* This service picks an object with a given pose */
+
+  //object_loc = request.object_loc;
+  //ROS_INFO(request.object_loc);
+  ROS_INFO("This function is running");
+
+  return true;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 

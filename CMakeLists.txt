@@ -20,6 +20,7 @@ find_package(catkin REQUIRED COMPONENTS roscpp
                                         tf2_ros
                                         pcl_conversions
                                         pcl_ros
+                                        cw1_world_spawner
   
 )
 
