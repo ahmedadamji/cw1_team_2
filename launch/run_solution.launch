@@ -6,6 +6,15 @@
   <!-- start the coursework world spawner with a delay -->
   <include file="$(find cw1_world_spawner)/launch/world_spawner.launch">
     <arg name="launch_delay" value="$(arg launch_delay)"/>
+
+  <!-- add your own nodes to launch below here -->
+  <!-- node to handle all service callbacks -->
+  <node pkg="cw1_team_2"
+        name="cw1_team_2_node"
+        type="cw1_team_2_node"
+        output="screen"
+  />
+
   </include>
 
   

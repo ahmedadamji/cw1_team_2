@@ -82,6 +82,10 @@ Cw1Solution::Cw1Solution (ros::NodeHandle &nh):
     &Cw1Solution::pickCallback, this);
   task1_srv_ = g_nh.advertiseService("/task1_start",
     &Cw1Solution::task1Callback, this);
+  task2_srv_ = g_nh.advertiseService("/task2_start",
+    &Cw1Solution::task2Callback, this);
+  task3_srv_ = g_nh.advertiseService("/task3_start",
+    &Cw1Solution::task3Callback, this);
 
   ROS_INFO("MoveIt! services initialisation finished, namespace: %s", 
     service_ns.c_str());
@@ -178,6 +182,50 @@ Cw1Solution::task1Callback(cw1_world_spawner::Task1Service::Request &request,
   return true;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
+bool
+Cw1Solution::task2Callback(cw1_world_spawner::Task2Service::Request &request,
+  cw1_world_spawner::Task2Service::Response &response)
+{
+  /* This service ...................... */
+
+  //object_loc = request.object_loc;
+  //ROS_INFO(request.object_loc);
+  ROS_INFO("This function is running");
+
+  std_msgs::Float32 r = request.r;
+  std_msgs::Float32 g = request.g;
+  std_msgs::Float32 b = request.b;
+
+  geometry_msgs::PointStamped centroid;
+  centroid.header.frame_id = base_frame_;
+  centroid.point.x = 0;
+  centroid.point.y = 0;
+  centroid.point.z = 0;
+
+  // geometry_msgs::PointStamped centroids[1];
+
+  // centroids[0] = centroid;
+  // response.centroids = centroids;
+
+  return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+bool
+Cw1Solution::task3Callback(cw1_world_spawner::Task3Service::Request &request,
+  cw1_world_spawner::Task3Service::Response &response)
+{
+  /* This service ...................... */
+
+  //object_loc = request.object_loc;
+  //ROS_INFO(request.object_loc);
+  ROS_INFO("This function is running");
+
+  return true;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 
