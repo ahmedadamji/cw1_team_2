@@ -48,6 +48,7 @@ main (int argc, char** argv)
     * You must call one of the versions of ros::init () before using any other
     * part of the ROS system.
     */
+
   ros::init (argc, argv, "cw1_team_2_node");
   
   /**
