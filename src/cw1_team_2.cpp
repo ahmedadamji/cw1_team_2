@@ -82,6 +82,10 @@ Cw1Solution::Cw1Solution (ros::NodeHandle &nh):
     &Cw1Solution::pickCallback, this);
   task1_srv_ = g_nh.advertiseService("/task1_start",
     &Cw1Solution::task1Callback, this);
+  task2_srv_ = g_nh.advertiseService("/task2_start",
+    &Cw1Solution::task2Callback, this);
+  task3_srv_ = g_nh.advertiseService("/task3_start",
+    &Cw1Solution::task3Callback, this);
 
   ROS_INFO("MoveIt! services initialisation finished, namespace: %s", 
     service_ns.c_str());
@@ -169,19 +173,26 @@ bool
 Cw1Solution::task1Callback(cw1_world_spawner::Task1Service::Request &request,
   cw1_world_spawner::Task1Service::Response &response)
 {
-  /* This service picks an object with a given pose */
+  /* This service picks an object with a given pose and places it at a given pose */
 
   //object_loc = request.object_loc;
   //ROS_INFO(request.object_loc);
 
+  //ADD FLOOR COLISION IF WE HAVE TIME
 
 
   ROS_INFO("This function is running");
 
+
+  geometry_msgs::Point origin;
+  origin.x = request.goal_loc.point.x;
+  origin.y = request.goal_loc.point.y;
+  origin.z = 0;
+
   geometry_msgs::Vector3 dimension;
   dimension.x = 0.2;
   dimension.y = 0.2;
-  dimension.z = 0.2;
+  dimension.z = 0.42;
 
   geometry_msgs::Quaternion orientation;
   
@@ -190,13 +201,9 @@ Cw1Solution::task1Callback(cw1_world_spawner::Task1Service::Request &request,
   orientation.z = 0.0;
   orientation.w = 1.0;
 
-  // addCollisionObject("cube", request.goal_loc.point, dimension, orientation);
+  
+  addCollisionObject("cube",origin,dimension,orientation);
 
-  // if (not collision_success) 
-  // {
-  //   ROS_ERROR("Collision failed");
-  //   return false;
-  // }
 
   bool pick_success = pick(request.object_loc.pose.position);
 
@@ -206,12 +213,47 @@ Cw1Solution::task1Callback(cw1_world_spawner::Task1Service::Request &request,
 
     return false;
   }
+  geometry_msgs::Point target_point;
+  target_point.x = request.goal_loc.point.x;
+  target_point.y = request.goal_loc.point.y;
+  target_point.z = request.goal_loc.point.z+0.02;
+
+  bool move_success = place(target_point);
+
+  if (not move_success)
+  {
+    ROS_ERROR("Placing the object failed");
+    
+    return false;
+  }
   
   
   return true;
 }
 
 
+///////////////////////////////////////////////////////////////////////////////
+
+bool
+Cw1Solution::task2Callback(cw1_world_spawner::Task2Service::Request &request,
+  cw1_world_spawner::Task2Service::Response &response)
+{
+  /* This service ... */
+  
+  return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+bool
+Cw1Solution::task3Callback(cw1_world_spawner::Task3Service::Request &request,
+  cw1_world_spawner::Task3Service::Response &response)
+{
+  /* This service ... */
+  
+  return true;
+}
 ///////////////////////////////////////////////////////////////////////////////
 
 bool
@@ -418,6 +460,69 @@ Cw1Solution::pick(geometry_msgs::Point position)
   }
 
   ROS_INFO("Pick operation successful");
+
+  return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+bool
+Cw1Solution::place(geometry_msgs::Point position)
+{
+  /* This function places an object using a pose. The given point is where the
+  centre of the gripper fingers will converge */
+
+  // define placing as from above
+  tf2::Quaternion q_x180deg(-1, 0, 0, 0);
+
+  // determine the placing orientation
+  tf2::Quaternion q_object;
+  q_object.setRPY(0, 0, angle_offset_);
+  tf2::Quaternion q_result = q_x180deg * q_object;
+  geometry_msgs::Quaternion place_orientation = tf2::toMsg(q_result);
+
+  // set the desired placing pose
+  geometry_msgs::Pose place_pose;
+  place_pose.position = position;
+  place_pose.orientation = place_orientation;
+  place_pose.position.z += z_offset_;
+
+  // set the desired pre-placing pose
+  geometry_msgs::Pose approach_pose;
+  approach_pose = place_pose;
+  approach_pose.position.z += approach_distance_;
+
+  /* Now perform the place */
+
+  bool success = true;
+
+  ROS_INFO("Begining place operation");
+
+  // move the arm above the place location
+  success *= moveArm(approach_pose);
+
+  if (not success) 
+  {
+    ROS_ERROR("Moving arm to place approach pose failed");
+    return false;
+  }
+
+  // approach to placing pose
+  success *= moveArm(place_pose);
+
+  if (not success) 
+  {
+    ROS_ERROR("Moving arm to placing pose failed");
+    return false;
+  }
+
+  // open the gripper
+  success *= moveGripper(gripper_open_);
+  if (not success) 
+  {
+    ROS_ERROR("Could not open Gripper");
+    return false;
+  }
 
   return true;
 }

@@ -83,6 +83,8 @@
 #include <cw1_team_2/remove_collision.h>
 #include <cw1_team_2/pick.h>
 #include <cw1_world_spawner/Task1Service.h>
+#include <cw1_world_spawner/Task2Service.h>
+#include <cw1_world_spawner/Task3Service.h>
 
 
 typedef pcl::PointXYZRGBA PointT;
@@ -169,6 +171,28 @@ class Cw1Solution
     task1Callback(cw1_world_spawner::Task1Service::Request &request,
       cw1_world_spawner::Task1Service::Response &response);
 
+    /** \brief Service callback function for ............. 
+      *
+      * \input[in] request service request ...............
+      *  
+      * \return true if .....................
+      */
+    bool 
+    task2Callback(cw1_world_spawner::Task2Service::Request &request,
+      cw1_world_spawner::Task2Service::Response &response);
+
+
+    /** \brief Service callback function for ............. 
+      *
+      * \input[in] request service request ...............
+      *  
+      * \return true if .....................
+      */
+    bool 
+    task3Callback(cw1_world_spawner::Task3Service::Request &request,
+      cw1_world_spawner::Task3Service::Response &response);
+
+
     /** \brief MoveIt function for moving the move_group to the target position.
       *
       * \input[in] target_pose pose to move the arm to
@@ -212,6 +236,13 @@ class Cw1Solution
       */
     bool
     pick(geometry_msgs::Point position);
+
+    /** \brief Place an object up with a given position.
+      * 
+      * \input[in] position the xyz coordinates where the gripper converges
+      */
+    bool
+    place(geometry_msgs::Point position);
 
     // FROM PCL TUTORIAL -->
     void
@@ -309,6 +340,9 @@ class Cw1Solution
     ros::ServiceServer remove_collision_srv_;
     ros::ServiceServer pick_srv_;
     ros::ServiceServer task1_srv_;
+    ros::ServiceServer task2_srv_;
+    ros::ServiceServer task3_srv_;
+
 
     /** \brief MoveIt interface to move groups to seperate the arm and the gripper,
       * these are defined in urdf. */
