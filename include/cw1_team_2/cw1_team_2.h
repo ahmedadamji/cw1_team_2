@@ -60,6 +60,7 @@
 #include <pcl/point_types.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/filters/passthrough.h>
+#include <pcl/filters/conditional_removal.h>
 #include <pcl/filters/extract_indices.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/ModelCoefficients.h>
@@ -245,6 +246,11 @@ class Cw1Solution
     place(geometry_msgs::Point position);
 
     // FROM PCL TUTORIAL -->
+
+    /** \brief Point Cloud CallBack function.
+      * 
+      * \input[in] cloud_input a PointCloud2 sensor_msgs const pointer
+      */
     void
     cloudCallBackOne (const sensor_msgs::PointCloud2ConstPtr& cloud_input_msg);
     
@@ -264,6 +270,15 @@ class Cw1Solution
       */
     void
     applyPT (PointCPtr &in_cloud_ptr,
+             PointCPtr &out_cloud_ptr);
+
+    /** \brief Apply Color filtering.
+      * 
+      * \input[in] in_cloud_ptr the input PointCloud2 pointer
+      * \input[out] out_cloud_ptr the output PointCloud2 pointer
+      */
+    void
+    applyCF (PointCPtr &in_cloud_ptr,
              PointCPtr &out_cloud_ptr);
     
     /** \brief Normal estimation.
@@ -359,6 +374,9 @@ class Cw1Solution
 
     /** \brief ROS publishers. */
     ros::Publisher g_pub_cloud;
+
+    /** \brief ROS subscribers. */
+    ros::Subscriber g_sub_cloud;
     
     /** \brief ROS geometry message point. */
     geometry_msgs::PointStamped g_cyl_pt_msg;
@@ -389,6 +407,12 @@ class Cw1Solution
     
     /** \brief Pass Through min and max threshold sizes. */
     double g_pt_thrs_min, g_pt_thrs_max;
+    
+    /** \brief Color filter. */
+    pcl::ConditionalRemoval<PointT> g_cf;
+
+    /** \brief Color filter rgb filter values. */
+    double g_cf_red, g_cf_green, g_cf_blue;
     
     /** \brief KDTree for nearest neighborhood search. */
     pcl::search::KdTree<PointT>::Ptr g_tree_ptr;

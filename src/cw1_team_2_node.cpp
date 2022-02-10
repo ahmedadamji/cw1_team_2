@@ -65,12 +65,13 @@ main (int argc, char** argv)
   // Create a Lab object
   Cw1Solution cw1_team_2 (nh);
 
-  // Create a ROS subscriber for the input point cloud
-  ros::Subscriber sub_cloud =
-    nh.subscribe ("/r200/camera/depth_registered/points",
-                  1,
-                  &Cw1Solution::cloudCallBackOne,
-                  &cw1_team_2);
+  // // Create a ROS subscriber for the input point cloud
+  // ros::Subscriber sub_cloud =
+  //   nh.subscribe ("/r200/camera/depth_registered/points",
+  //                 1,
+  //                 &Cw1Solution::cloudCallBackOne,
+  //                 &cw1_team_2);
+
 
   // loop rate in Hz
   ros::Rate rate(10);

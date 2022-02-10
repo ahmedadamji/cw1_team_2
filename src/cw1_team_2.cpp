@@ -57,13 +57,16 @@ Cw1Solution::Cw1Solution (ros::NodeHandle &nh):
   g_nh = nh;
 
   // Define the publishers
-  g_pub_cloud = nh.advertise<sensor_msgs::PointCloud2> ("filtered_cloud", 1, true);
-  g_pub_pose = nh.advertise<geometry_msgs::PointStamped> ("cyld_pt", 1, true);
+  g_pub_cloud = g_nh.advertise<sensor_msgs::PointCloud2> ("filtered_cloud", 1, true);
+  g_pub_pose = g_nh.advertise<geometry_msgs::PointStamped> ("cyld_pt", 1, true);
   
   // Define public variables
   g_vg_leaf_sz = 0.01; // VoxelGrid leaf size: Better in a config file
   g_pt_thrs_min = 0.0; // PassThrough min thres: Better in a config file
   g_pt_thrs_max = 0.7; // PassThrough max thres: Better in a config file
+  g_cf_red = 25.5; // Colour Filter Red Value: Better in a config file
+  g_cf_blue = 204; // Colour Filter Blue Value: Better in a config file
+  g_cf_green = 25.5; // Colour Filter Green Value: Better in a config file
   g_k_nn = 50; // Normals nn size: Better in a config file
 
   // namespace for our ROS services, they will appear as "/namespace/srv_name"
@@ -89,6 +92,11 @@ Cw1Solution::Cw1Solution (ros::NodeHandle &nh):
 
   ROS_INFO("MoveIt! services initialisation finished, namespace: %s", 
     service_ns.c_str());
+
+
+  // Create a ROS subscriber for the input point cloud
+  g_sub_cloud = g_nh.subscribe("/r200/camera/depth_registered/points",1,
+    &Cw1Solution::cloudCallBackOne,this);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -175,9 +183,6 @@ Cw1Solution::task1Callback(cw1_world_spawner::Task1Service::Request &request,
 {
   /* This service picks an object with a given pose and places it at a given pose */
 
-  //object_loc = request.object_loc;
-  //ROS_INFO(request.object_loc);
-
   //ADD FLOOR COLISION IF WE HAVE TIME
 
 
@@ -239,6 +244,27 @@ Cw1Solution::task2Callback(cw1_world_spawner::Task2Service::Request &request,
   cw1_world_spawner::Task2Service::Response &response)
 {
   /* This service ... */
+
+  g_cf_red = request.r.data;
+  g_cf_red = request.g.data;
+  g_cf_red = request.b.data;
+
+  g_sub_cloud;
+
+
+  geometry_msgs::PointStamped centroid;
+  centroid.point.x = 0;
+  centroid.point.y = 0;
+  centroid.point.z = 0;
+
+  // geometry_msgs::PointStamped centroids[1];
+
+  // centroids[0] = centroid;
+  // response.centroids = centroids;
+
+  
+
+
   
   return true;
 }
@@ -541,8 +567,9 @@ Cw1Solution::cloudCallBackOne
   pcl::fromPCLPointCloud2 (g_pcl_pc, *g_cloud_ptr);
 
   // Perform the filtering
-  applyVX (g_cloud_ptr, g_cloud_filtered);
+  //applyVX (g_cloud_ptr, g_cloud_filtered);
   //applyPT (g_cloud_ptr, g_cloud_filtered);
+  applyCF (g_cloud_ptr, g_cloud_filtered);
   
   // Segment plane and cylinder
   //findNormals (g_cloud_filtered);
@@ -551,7 +578,7 @@ Cw1Solution::cloudCallBackOne
   //findCylPose (g_cloud_cylinder);
     
   // Publish the data
-  //ROS_INFO ("Publishing Filtered Cloud 2");
+  ROS_INFO ("Publishing Filtered Cloud 2");
   pubFilteredPCMsg (g_pub_cloud, *g_cloud_filtered);
   //pubFilteredPCMsg (g_pub_cloud, *g_cloud_cylinder);
   
@@ -579,6 +606,31 @@ Cw1Solution::applyPT (PointCPtr &in_cloud_ptr,
   g_pt.setFilterFieldName ("x");
   g_pt.setFilterLimits (g_pt_thrs_min, g_pt_thrs_max);
   g_pt.filter (*out_cloud_ptr);
+  
+  return;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void
+Cw1Solution::applyCF (PointCPtr &in_cloud_ptr,
+                      PointCPtr &out_cloud_ptr)
+{
+ pcl::ConditionAnd<PointT>::Ptr condition (new pcl::ConditionAnd<PointT> ());
+
+
+ pcl::PackedRGBComparison<PointT>::Ptr red_condition(new pcl::PackedRGBComparison<PointT>("r", pcl::ComparisonOps::GT, g_cf_red));
+ condition->addComparison (red_condition);
+  
+ pcl::PackedRGBComparison<PointT>::Ptr green_condition(new pcl::PackedRGBComparison<PointT>("g", pcl::ComparisonOps::GT, g_cf_green));
+ condition->addComparison (green_condition);
+  
+ pcl::PackedRGBComparison<PointT>::Ptr blue_condition(new pcl::PackedRGBComparison<PointT>("b", pcl::ComparisonOps::GT, g_cf_blue));
+ condition->addComparison (blue_condition);
+ 
+  g_cf.setInputCloud (in_cloud_ptr);
+  //g_cf.setLeafSize (g_vg_leaf_sz, g_vg_leaf_sz, g_vg_leaf_sz);
+  g_cf.setCondition (condition);
+  g_cf.filter (*out_cloud_ptr);
   
   return;
 }
