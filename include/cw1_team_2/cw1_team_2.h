@@ -68,6 +68,7 @@
 #include <pcl/sample_consensus/model_types.h>
 #include <pcl/search/kdtree.h>
 #include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/segmentation/extract_clusters.h>
 
 // TF specific includes
 #include <tf/transform_broadcaster.h>
@@ -294,6 +295,13 @@ class Cw1Solution
       */
     void
     segPlane (PointCPtr &in_cloud_ptr);
+
+    /** \brief Segment clusters from point cloud.
+      * 
+      * \input[in] in_cloud_ptr the input PointCloud2 pointer
+      */
+    void
+    segClusters (PointCPtr &in_cloud_ptr);
     
     /** \brief Segment Cylinder from point cloud.
       * 
@@ -380,6 +388,10 @@ class Cw1Solution
     
     /** \brief ROS geometry message point. */
     geometry_msgs::PointStamped g_cyl_pt_msg;
+
+
+    /** \brief Current centroid found .................... */
+    geometry_msgs::PointStamped g_current_centroid;
     
     /** \brief ROS pose publishers. */
     ros::Publisher g_pub_pose;
@@ -452,7 +464,7 @@ class Cw1Solution
     
     /** \brief cw1Q1: TF listener definition. */
     tf::TransformListener g_listener_;
-    
+
 
   protected:
     /** \brief Debug mode. */
