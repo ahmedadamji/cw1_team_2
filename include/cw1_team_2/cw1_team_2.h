@@ -470,8 +470,8 @@ class Cw1Solution
     /** \brief cw1Q1: TF listener definition. */
     tf::TransformListener g_listener_;
     
-    /** \brief SOMETHING. */
-    std::vector<pcl::PointIndices> cluster_indices;
+    /** \brief SOMETHING........... */
+    std::vector<pcl::PointIndices> g_cluster_indices;
 
 
 

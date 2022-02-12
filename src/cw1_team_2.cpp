@@ -245,6 +245,20 @@ Cw1Solution::task2Callback(cw1_world_spawner::Task2Service::Request &request,
 {
   /* This service ... */
 
+
+  std::vector<geometry_msgs::PointStamped> centroids;
+
+
+  g_cf_red = request.r.data*255;
+  g_cf_green = request.g.data*255;
+  g_cf_blue = request.b.data*255;
+
+  std::cout << "red: " << g_cf_red << std::endl;
+  std::cout << "green: " << g_cf_green << std::endl;
+  std::cout << "blue: " << g_cf_blue << std::endl;
+
+  g_sub_cloud;
+
   // sleep(5);
 
   // geometry_msgs::Pose moveup;
@@ -267,35 +281,82 @@ Cw1Solution::task2Callback(cw1_world_spawner::Task2Service::Request &request,
   // }
 
   // sleep(5);
-  // geometry_msgs::Pose scan1;
-  // scan1.position.x = 0.4;
-  // scan1.position.y = -0.4;
-  // scan1.position.z = 0.4;
 
-  // scan1.orientation.x = -1;
-  // scan1.orientation.y = 0;
-  // scan1.orientation.z = 0;
-  // scan1.orientation.w = 0;
+  geometry_msgs::Pose scan1;
+  scan1.position.x = 0.4;
+  scan1.position.y = 0.4;
+  scan1.position.z = 0.6;
 
-  // bool scan1_success = moveArm(scan1);
+  scan1.orientation.x = -1;
+  scan1.orientation.y = 0;
+  scan1.orientation.z = 0;
+  scan1.orientation.w = 0;
 
-  // if (not scan1_success)
-  // {
-  //   ROS_ERROR("SCanning failed");
+  bool scan1_success = moveArm(scan1);
+
+  if (not scan1_success)
+  {
+    ROS_ERROR("SCanning failed");
     
-  //   return false;
-  // }
+    return false;
+  }
 
-  g_cf_red = request.r.data*255;
-  g_cf_green = request.g.data*255;
-  g_cf_blue = request.b.data*255;
+  ros::Duration(2.0).sleep();
 
-  std::cout << "red: " << g_cf_red << std::endl;
-  std::cout << "green: " << g_cf_green << std::endl;
-  std::cout << "blue: " << g_cf_blue << std::endl;
+  //MOVE
 
+
+  g_pt_thrs_min = 0.0; // PassThrough min thres: Better in a config file
+  g_pt_thrs_max = 0.4; // PassThrough max thres: Better in a config file
 
   g_sub_cloud;
+
+  // FIND CENTROIDS HERE
+
+  // int size1 = g_centroids.size();
+
+  // for (int i = 0; i <= size1; i++)
+  // {
+  //   centroids.push_back(g_centroids[i]);
+  // }
+
+  // MOVE
+
+  geometry_msgs::Pose scan2;
+  scan2.position.x = 0.4;
+  scan2.position.y = -0.4;
+  scan2.position.z = 0.6;
+
+  scan2.orientation.x = -1;
+  scan2.orientation.y = 0;
+  scan2.orientation.z = 0;
+  scan2.orientation.w = 0;
+
+  bool scan2_success = moveArm(scan2);
+
+  if (not scan2_success)
+  {
+    ROS_ERROR("SCanning failed");
+    
+    return false;
+  }
+
+  ros::Duration(2.0).sleep();
+
+  g_pt_thrs_min = -0.4; // PassThrough min thres: Better in a config file
+  g_pt_thrs_max = 0.0; // PassThrough max thres: Better in a config file
+
+  g_sub_cloud;
+
+  // FIND CENTROIDS HERE
+
+  // int size2 = g_centroids.size();
+
+  // for (int i = 0; i <= size2; i++)
+  // {
+  //   centroids.push_back(g_centroids[i]);
+  // }
+
 
 
 
@@ -309,11 +370,16 @@ Cw1Solution::task2Callback(cw1_world_spawner::Task2Service::Request &request,
 
   // centroids[0] = centroid;
   // response.centroids = centroids;
-  response.centroids = g_centroids;
 
-  //std::cout << g_centroids[0];
+  // int size3 = centroids.size();
 
-  
+  // for (int i = 0; i <= size3; i++)
+  // {
+  //   std::cout << centroids[i];
+  // }
+
+
+  response.centroids = centroids;
 
 
   
@@ -330,6 +396,11 @@ Cw1Solution::task3Callback(cw1_world_spawner::Task3Service::Request &request,
   /* This service ... */
 
   // sleep(5);
+
+  // // std_msgs/Float32 r
+  // // std_msgs/Float32 g
+  // // std_msgs/Float32 b
+  // // geometry_msgs/PointStamped goal_loc
 
   //only use x and y location to grasp as centroid is taken from top and does not provide adequate z information
 
@@ -637,7 +708,7 @@ Cw1Solution::cloudCallBackOne
 
   // Perform the filtering
   applyVX (g_cloud_ptr, g_cloud_filtered);
-  //applyPT (g_cloud_ptr, g_cloud_filtered);
+  applyPT (g_cloud_ptr, g_cloud_filtered);
   applyCF (g_cloud_ptr, g_cloud_filtered);
   
   // Segment plane and cylinder
@@ -645,7 +716,9 @@ Cw1Solution::cloudCallBackOne
   segPlane (g_cloud_filtered);
   segClusters (g_cloud_filtered);
 
-  for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it)
+  g_centroids.clear();
+
+  for (std::vector<pcl::PointIndices>::const_iterator it = g_cluster_indices.begin (); it != g_cluster_indices.end (); ++it)
   {
     pcl::PointCloud<PointT>::Ptr cloud_cluster (new pcl::PointCloud<PointT>);
     for (const auto& idx : it->indices)
@@ -654,7 +727,7 @@ Cw1Solution::cloudCallBackOne
     cloud_cluster->height = 1;
     cloud_cluster->is_dense = true;
 
-    std::cout << "Number of data points in the curent PointCloud cluster: " << cloud_cluster->size () << std::endl;
+    //std::cout << "Number of data points in the curent PointCloud cluster: " << cloud_cluster->size () << std::endl;
 
     g_current_centroid = findCylPose (cloud_cluster);
 
@@ -667,7 +740,7 @@ Cw1Solution::cloudCallBackOne
   findCylPose (g_cloud_filtered);
     
   // Publish the data
-  ROS_INFO ("Publishing Filtered Cloud 2");
+  //ROS_INFO ("Publishing Filtered Cloud 2");
   pubFilteredPCMsg (g_pub_cloud, *g_cloud_filtered);
   //pubFilteredPCMsg (g_pub_cloud, *g_cloud_cylinder);
   
@@ -692,7 +765,7 @@ Cw1Solution::applyPT (PointCPtr &in_cloud_ptr,
                       PointCPtr &out_cloud_ptr)
 {
   g_pt.setInputCloud (in_cloud_ptr);
-  g_pt.setFilterFieldName ("x");
+  g_pt.setFilterFieldName ("y");
   g_pt.setFilterLimits (g_pt_thrs_min, g_pt_thrs_max);
   g_pt.filter (*out_cloud_ptr);
   
@@ -704,30 +777,30 @@ void
 Cw1Solution::applyCF (PointCPtr &in_cloud_ptr,
                       PointCPtr &out_cloud_ptr)
 {
- pcl::ConditionAnd<PointT>::Ptr condition (new pcl::ConditionAnd<PointT> ());
+  pcl::ConditionAnd<PointT>::Ptr condition (new pcl::ConditionAnd<PointT> ());
 
- //Try to refer to this: http://docs.ros.org/en/hydro/api/pcl/html/namespacepcl_1_1ComparisonOps.html#a4b6372faf48ab0857b5e9ad5fd826361
+  //Try to refer to this: http://docs.ros.org/en/hydro/api/pcl/html/namespacepcl_1_1ComparisonOps.html#a4b6372faf48ab0857b5e9ad5fd826361
 
+  // Lower bound
+  pcl::PackedRGBComparison<PointT>::Ptr lb_red(new pcl::PackedRGBComparison<PointT>("r", pcl::ComparisonOps::GT, g_cf_red-20));
+  condition->addComparison (lb_red);
 
- pcl::PackedRGBComparison<PointT>::Ptr lred_condition(new pcl::PackedRGBComparison<PointT>("r", pcl::ComparisonOps::GT, g_cf_red-20));
- condition->addComparison (lred_condition);
-  
- pcl::PackedRGBComparison<PointT>::Ptr lgreen_condition(new pcl::PackedRGBComparison<PointT>("g", pcl::ComparisonOps::GT, g_cf_green-20));
- condition->addComparison (lgreen_condition);
-  
- pcl::PackedRGBComparison<PointT>::Ptr lblue_condition(new pcl::PackedRGBComparison<PointT>("b", pcl::ComparisonOps::GT, g_cf_blue-20));
- condition->addComparison (lblue_condition);
+  pcl::PackedRGBComparison<PointT>::Ptr lb_green(new pcl::PackedRGBComparison<PointT>("g", pcl::ComparisonOps::GT, g_cf_green-20));
+  condition->addComparison (lb_green);
 
+  pcl::PackedRGBComparison<PointT>::Ptr lb_blue(new pcl::PackedRGBComparison<PointT>("b", pcl::ComparisonOps::GT, g_cf_blue-20));
+  condition->addComparison (lb_blue);
 
- pcl::PackedRGBComparison<PointT>::Ptr ured_condition(new pcl::PackedRGBComparison<PointT>("r", pcl::ComparisonOps::LT, g_cf_red+20));
- condition->addComparison (ured_condition);
-  
- pcl::PackedRGBComparison<PointT>::Ptr ugreen_condition(new pcl::PackedRGBComparison<PointT>("g", pcl::ComparisonOps::LT, g_cf_green+20));
- condition->addComparison (ugreen_condition);
-  
- pcl::PackedRGBComparison<PointT>::Ptr ublue_condition(new pcl::PackedRGBComparison<PointT>("b", pcl::ComparisonOps::LT, g_cf_blue+20));
- condition->addComparison (ublue_condition);
- 
+  // Upper bound
+  pcl::PackedRGBComparison<PointT>::Ptr ub_red(new pcl::PackedRGBComparison<PointT>("r", pcl::ComparisonOps::LT, g_cf_red+20));
+  condition->addComparison (ub_red);
+
+  pcl::PackedRGBComparison<PointT>::Ptr ub_green(new pcl::PackedRGBComparison<PointT>("g", pcl::ComparisonOps::LT, g_cf_green+20));
+  condition->addComparison (ub_green);
+
+  pcl::PackedRGBComparison<PointT>::Ptr ub_blue(new pcl::PackedRGBComparison<PointT>("b", pcl::ComparisonOps::LT, g_cf_blue+20));
+  condition->addComparison (ub_blue);
+
   g_cf.setInputCloud (in_cloud_ptr);
   //g_cf.setLeafSize (g_vg_leaf_sz, g_vg_leaf_sz, g_vg_leaf_sz);
   g_cf.setCondition (condition);
@@ -783,9 +856,9 @@ Cw1Solution::segPlane (PointCPtr &in_cloud_ptr)
   g_extract_normals.filter (*g_cloud_normals2);
 
   //ROS_INFO_STREAM ("Plane coefficients: " << *g_coeff_plane);
-  ROS_INFO_STREAM ("PointCloud representing the planar component: "
-                   << g_cloud_plane->size ()
-                   << " data points.");
+  // ROS_INFO_STREAM ("PointCloud representing the planar component: "
+  //                  << g_cloud_plane->size ()
+  //                  << " data points.");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -793,17 +866,17 @@ void
 Cw1Solution::segClusters (PointCPtr &in_cloud_ptr)
 {
   // REFERENCE: https://pcl.readthedocs.io/en/latest/cluster_extraction.html
-  std::cout << "Number of data points in the unclustered PointCloud: " << in_cloud_ptr->size () << std::endl; //*
+  //std::cout << "Number of data points in the unclustered PointCloud: " << in_cloud_ptr->size () << std::endl; //*
 
   //To clear previous cluster indices
-  cluster_indices.clear();
+  g_cluster_indices.clear();
 
   g_ec.setClusterTolerance (0.02); // 2cm
   g_ec.setMinClusterSize (500);
   g_ec.setMaxClusterSize (5000);
   g_ec.setSearchMethod (g_tree_ptr);
   g_ec.setInputCloud (in_cloud_ptr);
-  g_ec.extract (cluster_indices);
+  g_ec.extract (g_cluster_indices);
 
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -831,9 +904,9 @@ Cw1Solution::segCylind (PointCPtr &in_cloud_ptr)
   g_extract_pc.setNegative (false);
   g_extract_pc.filter (*g_cloud_cylinder);
   
-  ROS_INFO_STREAM ("PointCloud representing the cylinder component: "
-                   << g_cloud_cylinder->size ()
-                   << " data points.");
+  // ROS_INFO_STREAM ("PointCloud representing the cylinder component: "
+  //                  << g_cloud_cylinder->size ()
+  //                  << " data points.");
   
   return;
 }
