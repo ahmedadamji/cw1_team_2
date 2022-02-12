@@ -315,8 +315,8 @@ class Cw1Solution
       * 
       * \input[in] in_cloud_ptr the input PointCloud2 pointer
       */
-    void
-    findCylPose (PointCPtr &in_cloud_ptr);
+    geometry_msgs::PointStamped
+    findCylPose (PointCPtr &in_cloud_ptr); //set return here
     
     /** \brief Point Cloud publisher.
       * 
@@ -389,9 +389,11 @@ class Cw1Solution
     /** \brief ROS geometry message point. */
     geometry_msgs::PointStamped g_cyl_pt_msg;
 
-
     /** \brief Current centroid found .................... */
     geometry_msgs::PointStamped g_current_centroid;
+
+    /** \brief All centroids found .................... */
+    std::vector<geometry_msgs::PointStamped> g_centroids;
     
     /** \brief ROS pose publishers. */
     ros::Publisher g_pub_pose;
@@ -441,6 +443,9 @@ class Cw1Solution
     /** \brief SAC segmentation. */
     pcl::SACSegmentationFromNormals<PointT, pcl::Normal> g_seg; 
     
+    /** \brief Euclidean Cluster Extraction. */
+    pcl::EuclideanClusterExtraction<PointT> g_ec;
+    
     /** \brief Extract point cloud indices. */
     pcl::ExtractIndices<PointT> g_extract_pc;
   
@@ -464,6 +469,10 @@ class Cw1Solution
     
     /** \brief cw1Q1: TF listener definition. */
     tf::TransformListener g_listener_;
+    
+    /** \brief SOMETHING. */
+    std::vector<pcl::PointIndices> cluster_indices;
+
 
 
   protected:

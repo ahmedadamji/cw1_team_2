@@ -290,34 +290,28 @@ Cw1Solution::task2Callback(cw1_world_spawner::Task2Service::Request &request,
   g_cf_green = request.g.data*255;
   g_cf_blue = request.b.data*255;
 
+  std::cout << "red: " << g_cf_red << std::endl;
+  std::cout << "green: " << g_cf_green << std::endl;
+  std::cout << "blue: " << g_cf_blue << std::endl;
+
+
   g_sub_cloud;
 
-  sleep(5);
-
-  geometry_msgs::Point position;
-  position.x = g_current_centroid.point.x;
-  position.y = g_current_centroid.point.y;
-  position.z = g_current_centroid.point.z - 0.05;
-
-  bool pick_success = pick(position);
-
-  if (not pick_success) 
-  {
-    ROS_ERROR("Object Pick up  failed");
-
-    return false;
-  }
 
 
-  geometry_msgs::PointStamped centroid;
-  centroid.point.x = 0;
-  centroid.point.y = 0;
-  centroid.point.z = 0;
+
+  // geometry_msgs::PointStamped centroid;
+  // centroid.point.x = 0;
+  // centroid.point.y = 0;
+  // centroid.point.z = 0;
 
   // geometry_msgs::PointStamped centroids[1];
 
   // centroids[0] = centroid;
   // response.centroids = centroids;
+  response.centroids = g_centroids;
+
+  //std::cout << g_centroids[0];
 
   
 
@@ -334,6 +328,24 @@ Cw1Solution::task3Callback(cw1_world_spawner::Task3Service::Request &request,
   cw1_world_spawner::Task3Service::Response &response)
 {
   /* This service ... */
+
+  // sleep(5);
+
+  //only use x and y location to grasp as centroid is taken from top and does not provide adequate z information
+
+  // geometry_msgs::Point position;
+  // position.x = g_current_centroid.point.x;
+  // position.y = g_current_centroid.point.y;
+  // position.z = g_current_centroid.point.z - 0.05; //Use same z as we used previously for task 1
+
+  // bool pick_success = pick(position);
+
+  // if (not pick_success) 
+  // {
+  //   ROS_ERROR("Object Pick up  failed");
+
+  //   return false;
+  // }
   
   return true;
 }
@@ -631,7 +643,25 @@ Cw1Solution::cloudCallBackOne
   // Segment plane and cylinder
   findNormals (g_cloud_filtered);
   segPlane (g_cloud_filtered);
-  //segClusters (g_cloud_filtered);
+  segClusters (g_cloud_filtered);
+
+  for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it)
+  {
+    pcl::PointCloud<PointT>::Ptr cloud_cluster (new pcl::PointCloud<PointT>);
+    for (const auto& idx : it->indices)
+    cloud_cluster->push_back ((*g_cloud_filtered)[idx]); //*
+    cloud_cluster->width = cloud_cluster->size ();
+    cloud_cluster->height = 1;
+    cloud_cluster->is_dense = true;
+
+    std::cout << "Number of data points in the curent PointCloud cluster: " << cloud_cluster->size () << std::endl;
+
+    g_current_centroid = findCylPose (cloud_cluster);
+
+    g_centroids.push_back(g_current_centroid);
+
+  }
+
   //segCylind (g_cloud_filtered);
   //findCylPose (g_cloud_cylinder);
   findCylPose (g_cloud_filtered);
@@ -679,14 +709,24 @@ Cw1Solution::applyCF (PointCPtr &in_cloud_ptr,
  //Try to refer to this: http://docs.ros.org/en/hydro/api/pcl/html/namespacepcl_1_1ComparisonOps.html#a4b6372faf48ab0857b5e9ad5fd826361
 
 
- pcl::PackedRGBComparison<PointT>::Ptr red_condition(new pcl::PackedRGBComparison<PointT>("r", pcl::ComparisonOps::GT, g_cf_red));
- condition->addComparison (red_condition);
+ pcl::PackedRGBComparison<PointT>::Ptr lred_condition(new pcl::PackedRGBComparison<PointT>("r", pcl::ComparisonOps::GT, g_cf_red-20));
+ condition->addComparison (lred_condition);
   
- pcl::PackedRGBComparison<PointT>::Ptr green_condition(new pcl::PackedRGBComparison<PointT>("g", pcl::ComparisonOps::GT, g_cf_green));
- condition->addComparison (green_condition);
+ pcl::PackedRGBComparison<PointT>::Ptr lgreen_condition(new pcl::PackedRGBComparison<PointT>("g", pcl::ComparisonOps::GT, g_cf_green-20));
+ condition->addComparison (lgreen_condition);
   
- pcl::PackedRGBComparison<PointT>::Ptr blue_condition(new pcl::PackedRGBComparison<PointT>("b", pcl::ComparisonOps::GT, g_cf_blue));
- condition->addComparison (blue_condition);
+ pcl::PackedRGBComparison<PointT>::Ptr lblue_condition(new pcl::PackedRGBComparison<PointT>("b", pcl::ComparisonOps::GT, g_cf_blue-20));
+ condition->addComparison (lblue_condition);
+
+
+ pcl::PackedRGBComparison<PointT>::Ptr ured_condition(new pcl::PackedRGBComparison<PointT>("r", pcl::ComparisonOps::LT, g_cf_red+20));
+ condition->addComparison (ured_condition);
+  
+ pcl::PackedRGBComparison<PointT>::Ptr ugreen_condition(new pcl::PackedRGBComparison<PointT>("g", pcl::ComparisonOps::LT, g_cf_green+20));
+ condition->addComparison (ugreen_condition);
+  
+ pcl::PackedRGBComparison<PointT>::Ptr ublue_condition(new pcl::PackedRGBComparison<PointT>("b", pcl::ComparisonOps::LT, g_cf_blue+20));
+ condition->addComparison (ublue_condition);
  
   g_cf.setInputCloud (in_cloud_ptr);
   //g_cf.setLeafSize (g_vg_leaf_sz, g_vg_leaf_sz, g_vg_leaf_sz);
@@ -752,83 +792,18 @@ Cw1Solution::segPlane (PointCPtr &in_cloud_ptr)
 void
 Cw1Solution::segClusters (PointCPtr &in_cloud_ptr)
 {
-  pcl::PointCloud<PointT>::Ptr cloud_plane (new pcl::PointCloud<PointT> ());
+  // REFERENCE: https://pcl.readthedocs.io/en/latest/cluster_extraction.html
+  std::cout << "Number of data points in the unclustered PointCloud: " << in_cloud_ptr->size () << std::endl; //*
 
-  pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>), cloud_f(new pcl::PointCloud<PointT>);
-  
-  pcl::PCDWriter writer;
+  //To clear previous cluster indices
+  cluster_indices.clear();
 
-  // Create the segmentation object for the planar model
-  // and set all the params
-  g_seg.setOptimizeCoefficients (true);
-  g_seg.setModelType (pcl::SACMODEL_NORMAL_PLANE);
-  g_seg.setMethodType (pcl::SAC_RANSAC);
-  g_seg.setMaxIterations (100); //bad style
-  g_seg.setDistanceThreshold (0.03); //bad style
-  g_seg.setInputCloud (in_cloud_ptr);
-  g_seg.setInputNormals (g_cloud_normals);
-
-
-  int nr_points = (int) in_cloud_ptr->size ();
-  while (in_cloud_ptr->size () > 0.3 * nr_points)
-  {
-    //create a new one for inliers and so on
-    //as plane is used by something else
-    g_seg.setInputCloud (in_cloud_ptr);
-    g_seg.setInputNormals (g_cloud_normals);
-    g_seg.segment (*g_inliers_plane, *g_coeff_plane);
-    if (g_inliers_plane->indices.size () == 0)
-    {
-      std::cout << "Could not estimate a planar model for the given dataset." << std::endl;
-      break;
-    }
-
-    // Extract the planar inliers from the input cloud
-    pcl::ExtractIndices<PointT> extract;
-    extract.setInputCloud (in_cloud_ptr);
-    extract.setIndices (g_inliers_plane);
-    extract.setNegative (false);
- 
-    // Get the points associated with the planar surface
-    extract.filter (*cloud_plane);
-    std::cout << "PointCloud representing the planar component: " << cloud_plane->size () << " data points." << std::endl;
- 
-    // Remove the planar inliers, extract the rest
-    extract.setNegative (true);
-    extract.filter (*cloud_f);
-    *in_cloud_ptr = *cloud_f;
-
-  }
-
-  // Creating the KdTree object for the search method of the extraction
-  pcl::search::KdTree<PointT>::Ptr tree (new pcl::search::KdTree<PointT>);
-  tree->setInputCloud (in_cloud_ptr);
-
-  std::vector<pcl::PointIndices> cluster_indices;
-  pcl::EuclideanClusterExtraction<PointT> ec;
-  ec.setClusterTolerance (0.02); // 2cm
-  ec.setMinClusterSize (100);
-  ec.setMaxClusterSize (25000);
-  ec.setSearchMethod (tree);
-  ec.setInputCloud (in_cloud_ptr);
-  ec.extract (cluster_indices);
-
-  int j = 0;
-  for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it)
-  {
-    pcl::PointCloud<PointT>::Ptr cloud_cluster (new pcl::PointCloud<PointT>);
-    for (const auto& idx : it->indices)
-      cloud_cluster->push_back ((*in_cloud_ptr)[idx]); //*
-    cloud_cluster->width = cloud_cluster->size ();
-    cloud_cluster->height = 1;
-    cloud_cluster->is_dense = true;
-
-    std::cout << "PointCloud representing the Cluster: " << cloud_cluster->size () << " data points." << std::endl;
-    std::stringstream ss;
-    ss << "cloud_cluster_" << j << ".pcd";
-    writer.write<PointT> (ss.str (), *cloud_cluster, false); //*
-    j++;
-  }
+  g_ec.setClusterTolerance (0.02); // 2cm
+  g_ec.setMinClusterSize (500);
+  g_ec.setMaxClusterSize (5000);
+  g_ec.setSearchMethod (g_tree_ptr);
+  g_ec.setInputCloud (in_cloud_ptr);
+  g_ec.extract (cluster_indices);
 
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -864,7 +839,7 @@ Cw1Solution::segCylind (PointCPtr &in_cloud_ptr)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void
+geometry_msgs::PointStamped
 Cw1Solution::findCylPose (PointCPtr &in_cloud_ptr)
 {
   Eigen::Vector4f centroid_in;
@@ -896,7 +871,7 @@ Cw1Solution::findCylPose (PointCPtr &in_cloud_ptr)
 
 
   
-  return;
+  return g_cyl_pt_msg_out;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
