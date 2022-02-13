@@ -62,8 +62,10 @@ Cw1Solution::Cw1Solution (ros::NodeHandle &nh):
   
   // Define public variables
   g_vg_leaf_sz = 0.01; // VoxelGrid leaf size: Better in a config file
-  g_pt_thrs_min = 0.0; // PassThrough min thres: Better in a config file
-  g_pt_thrs_max = 0.7; // PassThrough max thres: Better in a config file
+  g_pt_x_thrs_min = -0.7; // PassThrough min thres: Better in a config file
+  g_pt_x_thrs_max = -0.5; // PassThrough max thres: Better in a config file
+  g_pt_y_thrs_min = 0.0; // PassThrough min thres: Better in a config file
+  g_pt_y_thrs_max = 0.4; // PassThrough max thres: Better in a config file
   g_cf_red = 25.5; // Colour Filter Red Value: Better in a config file
   g_cf_blue = 204; // Colour Filter Blue Value: Better in a config file
   g_cf_green = 25.5; // Colour Filter Green Value: Better in a config file
@@ -244,8 +246,7 @@ Cw1Solution::task2Callback(cw1_world_spawner::Task2Service::Request &request,
   cw1_world_spawner::Task2Service::Response &response)
 {
   /* This service ... */
-
-
+  
   std::vector<geometry_msgs::PointStamped> centroids;
 
 
@@ -257,24 +258,11 @@ Cw1Solution::task2Callback(cw1_world_spawner::Task2Service::Request &request,
   std::cout << "green: " << g_cf_green << std::endl;
   std::cout << "blue: " << g_cf_blue << std::endl;
 
-  g_sub_cloud;
-
-  PointCPtr current_cloud_ptr = g_cloud_ptr;
- 
-  PointCPtr current_cloud_filtered = g_cloud_filtered;
-  
-  cloudPtrFunc(current_cloud_ptr, current_cloud_filtered);
-
-  std::vector<geometry_msgs::PointStamped> current_centroids = g_centroids;
-
-  if(current_centroids == g_centroids){ //This is after every movement. I was trying to see if it acc stores the centroid. from what
-  //ran, it looks like it stores every single time even when theres no centroid/ cube to get a centroid. either that or the camera is wider than i thought an it can still see the cube
-    ROS_INFO("It stored") ;
-  }
 
   geometry_msgs::Pose scan1;
-  scan1.position.x = 0.4;
-  scan1.position.y = 0.4;
+
+  scan1.position.x = 0.35;
+  scan1.position.y = 0.20;
   scan1.position.z = 0.6;
 
   scan1.orientation.x = -1;
@@ -282,100 +270,125 @@ Cw1Solution::task2Callback(cw1_world_spawner::Task2Service::Request &request,
   scan1.orientation.z = 0;
   scan1.orientation.w = 0;
 
-  bool scan1_success = moveArm(scan1);
 
-  g_pt_thrs_min = 0.0; // PassThrough min thres: Better in a config file
-  g_pt_thrs_max = 0.4; // PassThrough max thres: Better in a config file
+  g_pt_x_thrs_min = 0.2;
+  g_pt_y_thrs_min = 0.4;
 
-  g_sub_cloud;
-
-  current_cloud_ptr = g_cloud_ptr;
- 
-  current_cloud_filtered = g_cloud_filtered;
-  
-  cloudPtrFunc(current_cloud_ptr, current_cloud_filtered);
-
-  std::vector<geometry_msgs::PointStamped> current_centroids2 = g_centroids;
-
-  if(current_centroids2 == g_centroids){
-    ROS_INFO("It stored") ;
-  }
-
-
-  scan1.position.x += 0.1; // Move forward along the x axis to start scanning the upper row
-  scan1_success = moveArm(scan1);
-
-  g_sub_cloud;
-
-  current_cloud_ptr = g_cloud_ptr;
- 
-  current_cloud_filtered = g_cloud_filtered;
-  
-  cloudPtrFunc(current_cloud_ptr, current_cloud_filtered);
-
-  std::vector<geometry_msgs::PointStamped> current_centroids3 = g_centroids;
-
-  if(current_centroids3 == g_centroids){
-    ROS_INFO("It stored") ;
-  }
-
-
-  for (int i = 0; i< 8; i++) // Basiclly starts scannign from right to left
+  for (int i = 1; i <= 2; i++)
   {
-    scan1.position.y -= 0.1;
-    scan1_success = moveArm(scan1);
+      
+    bool scan1_success = moveArm(scan1);
+
+    g_pt_x_thrs_max = g_pt_x_thrs_min + 0.3;
+    g_pt_y_thrs_max = g_pt_y_thrs_min + 0.4;
 
     g_sub_cloud;
 
-    current_cloud_ptr = g_cloud_ptr;
-  
-    current_cloud_filtered = g_cloud_filtered;
-    
-    cloudPtrFunc(current_cloud_ptr, current_cloud_filtered);
-
-    current_centroids3 = g_centroids;
-
-    if(current_centroids3 == g_centroids){
-      ROS_INFO("It stored") ;
-    }
-  }
-
-  scan1.position.x -= 0.1; // Move back down to start scanning the lower row
-  scan1_success = moveArm(scan1);
-  g_sub_cloud;
-
-  current_cloud_ptr = g_cloud_ptr;
-
-  current_cloud_filtered = g_cloud_filtered;
-
-  cloudPtrFunc(current_cloud_ptr, current_cloud_filtered);
-
-  current_centroids3 = g_centroids;
-
-  if(current_centroids3 == g_centroids){
-    ROS_INFO("It stored") ;
-  }
-
-  for (int j = 0; j< 5; j++)// Move along the y axis back to the starting position ish
-  {
-    scan1.position.y += 0.1;
-    scan1_success = moveArm(scan1);
+    ros::Duration(2.0).sleep();
 
     g_sub_cloud;
 
-    current_cloud_ptr = g_cloud_ptr;
-  
-    current_cloud_filtered = g_cloud_filtered;
+    // PointCPtr current_cloud_ptr = nullptr;
+    // *current_cloud_ptr = *g_cloud_ptr;
+    // PointCPtr current_cloud_filtered = nullptr;
+    // *current_cloud_filtered = *g_cloud_filtered;
     
-    cloudPtrFunc(current_cloud_ptr, current_cloud_filtered);
+    //cloudPtrFunc(g_cloud_ptr, g_cloud_filtered);
 
-    current_centroids3 = g_centroids;
+    centroids = g_centroids;
 
-    if(current_centroids3 == g_centroids){
-      ROS_INFO("It stored") ;
-    }
+    g_pt_x_thrs_min += 0.3;
+    scan1.position.x += 0.3; // Move forward along the x axis to start scanning the upper row
+
+  }
+
+  geometry_msgs::Pose scan2;
+
+  scan2.position.x = 0.35;
+  scan2.position.y = 0.00;
+  scan2.position.z = 0.6;
+
+  scan2.orientation.x = -1;
+  scan2.orientation.y = 0;
+  scan2.orientation.z = 0;
+  scan2.orientation.w = 0;
+
+
+  g_pt_x_thrs_min = 0.2;
+  g_pt_y_thrs_min = 0.0;
+
+  for (int i = 1; i <= 2; i++)
+  {
+      
+    bool scan2_success = moveArm(scan2);
+
+    g_pt_x_thrs_max = g_pt_x_thrs_min + 0.3;
+    g_pt_y_thrs_max = g_pt_y_thrs_min + 0.4;
+
+    ros::Duration(2.0).sleep();
+
+    g_sub_cloud;
+
+    // PointCPtr current_cloud_ptr = nullptr;
+    // *current_cloud_ptr = *g_cloud_ptr;
+    // PointCPtr current_cloud_filtered = nullptr;
+    // *current_cloud_filtered = *g_cloud_filtered;
+    
+    //cloudPtrFunc(g_cloud_ptr, g_cloud_filtered);
+
+    g_sub_cloud;
+
+    centroids = g_centroids;
+
+    g_pt_x_thrs_min += 0.3;
+    scan2.position.x += 0.3; // Move forward along the x axis to start scanning the upper row
+
+  }
+
+  geometry_msgs::Pose scan3;
+
+  scan3.position.x = 0.35;
+  scan3.position.y = -0.20;
+  scan3.position.z = 0.6;
+
+  scan3.orientation.x = -1;
+  scan3.orientation.y = 0;
+  scan3.orientation.z = 0;
+  scan3.orientation.w = 0;
+
+  g_pt_x_thrs_min = 0.2;
+  g_pt_y_thrs_min = -0.4;
+
+  for (int i = 1; i <= 2; i++)
+  {
+      
+    bool scan3_success = moveArm(scan3);
+
+    g_pt_x_thrs_max = g_pt_x_thrs_min + 0.3;
+    g_pt_y_thrs_max = g_pt_y_thrs_min + 0.4;
+
+    g_sub_cloud;
+
+    ros::Duration(2.0).sleep();
+
+    g_sub_cloud;
+
+    // PointCPtr current_cloud_ptr = nullptr;
+    // *current_cloud_ptr = *g_cloud_ptr;
+    // PointCPtr current_cloud_filtered = nullptr;
+    // *current_cloud_filtered = *g_cloud_filtered;
+    
+    //cloudPtrFunc(g_cloud_ptr, g_cloud_filtered);
+
+    centroids = g_centroids;
+
+    g_pt_x_thrs_min += 0.3;
+    scan3.position.x += 0.3; // Move forward along the x axis to start scanning the upper row
+
   }
   
+  //std::cout << g_centroids[0];
+
   
 
 
@@ -690,45 +703,6 @@ Cw1Solution::place(geometry_msgs::Point position)
   return true;
 }
 
-void
-Cw1Solution::cloudPtrFunc(PointCPtr &current_cloud_ptr, PointCPtr &current_cloud_filtered )
-{
-  // Perform the filtering
-  applyVX (current_cloud_ptr, current_cloud_filtered);
-  applyPT (current_cloud_ptr, current_cloud_filtered);
-  applyCF (current_cloud_ptr, current_cloud_filtered);
-  
-  // Segment plane and cylinder
-  findNormals (current_cloud_filtered);
-  segPlane (current_cloud_filtered);
-  segClusters (current_cloud_filtered);
-  
-  g_centroids.clear();
-  
-  for (std::vector<pcl::PointIndices>::const_iterator it = g_cluster_indices.begin (); it != g_cluster_indices.end (); ++it)
-  {
-  pcl::PointCloud<PointT>::Ptr cloud_cluster (new pcl::PointCloud<PointT>);
-  for (const auto& idx : it->indices)
-  cloud_cluster->push_back ((*current_cloud_filtered)[idx]); //*
-  cloud_cluster->width = cloud_cluster->size ();
-  cloud_cluster->height = 1;
-  cloud_cluster->is_dense = true;
-  
-  std::cout << "Number of data points in the curent PointCloud cluster: " << cloud_cluster->size () << std::endl;
-  
-  g_current_centroid = findCylPose (cloud_cluster);
-  
-  std::cout << g_current_centroid << std::endl;
-
-  g_centroids.push_back(g_current_centroid);
-
-  
-  
-  }
-  
-  
-  return;
-}
 ////////////FROM PCL TUTORIAL//////////////////////////////
 
 void
@@ -742,43 +716,44 @@ Cw1Solution::cloudCallBackOne
   pcl_conversions::toPCL (*cloud_input_msg, g_pcl_pc);
   pcl::fromPCLPointCloud2 (g_pcl_pc, *g_cloud_ptr);
 
+
   // Perform the filtering
-  // applyVX (g_cloud_ptr, g_cloud_filtered);
-  // applyPT (g_cloud_ptr, g_cloud_filtered);
-  // applyCF (g_cloud_ptr, g_cloud_filtered);
+  applyVX (g_cloud_ptr, g_cloud_filtered);
+  applyPT (g_cloud_ptr, g_cloud_filtered);
+  applyCF (g_cloud_ptr, g_cloud_filtered);
   
-  // // Segment plane and cylinder
-  // findNormals (g_cloud_filtered);
-  // segPlane (g_cloud_filtered);
-  // segClusters (g_cloud_filtered);
+  // Segment plane and cylinder
+  findNormals (g_cloud_filtered);
+  segPlane (g_cloud_filtered);
+  segClusters (g_cloud_filtered);
 
-  // g_centroids.clear();
+  g_centroids.clear();
 
-  // for (std::vector<pcl::PointIndices>::const_iterator it = g_cluster_indices.begin (); it != g_cluster_indices.end (); ++it)
-  // {
-  //   pcl::PointCloud<PointT>::Ptr cloud_cluster (new pcl::PointCloud<PointT>);
-  //   for (const auto& idx : it->indices)
-  //   cloud_cluster->push_back ((*g_cloud_filtered)[idx]); //*
-  //   cloud_cluster->width = cloud_cluster->size ();
-  //   cloud_cluster->height = 1;
-  //   cloud_cluster->is_dense = true;
+  for (std::vector<pcl::PointIndices>::const_iterator it = g_cluster_indices.begin (); it != g_cluster_indices.end (); ++it)
+  {
+    pcl::PointCloud<PointT>::Ptr cloud_cluster (new pcl::PointCloud<PointT>);
+    for (const auto& idx : it->indices)
+    cloud_cluster->push_back ((*g_cloud_filtered)[idx]); //*
+    cloud_cluster->width = cloud_cluster->size ();
+    cloud_cluster->height = 1;
+    cloud_cluster->is_dense = true;
 
-  //   //std::cout << "Number of data points in the curent PointCloud cluster: " << cloud_cluster->size () << std::endl;
+    std::cout << "Number of data points in the curent PointCloud cluster: " << cloud_cluster->size () << std::endl;
 
-  //   g_current_centroid = findCylPose (cloud_cluster);
+    g_current_centroid = findCylPose (cloud_cluster);
 
-  //   g_centroids.push_back(g_current_centroid);
+    g_centroids.push_back(g_current_centroid);
 
-  // }
+  }
 
-  // //segCylind (g_cloud_filtered);
-  // //findCylPose (g_cloud_cylinder);
-  // findCylPose (g_cloud_filtered);
+  //segCylind (g_cloud_filtered);
+  //findCylPose (g_cloud_cylinder);
+  findCylPose (g_cloud_filtered);
     
-  // // Publish the data
-  // //ROS_INFO ("Publishing Filtered Cloud 2");
-  // pubFilteredPCMsg (g_pub_cloud, *g_cloud_filtered);
-  // //pubFilteredPCMsg (g_pub_cloud, *g_cloud_cylinder);
+  // Publish the data
+  ROS_INFO ("Publishing Filtered Cloud 2");
+  pubFilteredPCMsg (g_pub_cloud, *g_cloud_filtered);
+  //pubFilteredPCMsg (g_pub_cloud, *g_cloud_cylinder);
   
   return;
 }
@@ -795,14 +770,18 @@ Cw1Solution::applyVX (PointCPtr &in_cloud_ptr,
   return;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 void
 Cw1Solution::applyPT (PointCPtr &in_cloud_ptr,
                       PointCPtr &out_cloud_ptr)
 {
   g_pt.setInputCloud (in_cloud_ptr);
+  g_pt.setFilterFieldName ("x");
+  g_pt.setFilterLimits (g_pt_x_thrs_min, g_pt_x_thrs_max);
+  g_pt.filter (*out_cloud_ptr);
   g_pt.setFilterFieldName ("y");
-  g_pt.setFilterLimits (g_pt_thrs_min, g_pt_thrs_max);
+  g_pt.setFilterLimits (g_pt_y_thrs_min, g_pt_y_thrs_max);
   g_pt.filter (*out_cloud_ptr);
   
   return;
@@ -891,10 +870,10 @@ Cw1Solution::segPlane (PointCPtr &in_cloud_ptr)
   g_extract_normals.setIndices (g_inliers_plane);
   g_extract_normals.filter (*g_cloud_normals2);
 
-  //ROS_INFO_STREAM ("Plane coefficients: " << *g_coeff_plane);
-  // ROS_INFO_STREAM ("PointCloud representing the planar component: "
-  //                  << g_cloud_plane->size ()
-  //                  << " data points.");
+  ROS_INFO_STREAM ("Plane coefficients: " << *g_coeff_plane);
+  ROS_INFO_STREAM ("PointCloud representing the planar component: "
+                   << g_cloud_plane->size ()
+                   << " data points.");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -902,14 +881,14 @@ void
 Cw1Solution::segClusters (PointCPtr &in_cloud_ptr)
 {
   // REFERENCE: https://pcl.readthedocs.io/en/latest/cluster_extraction.html
-  //std::cout << "Number of data points in the unclustered PointCloud: " << in_cloud_ptr->size () << std::endl; //*
+  std::cout << "Number of data points in the unclustered PointCloud: " << in_cloud_ptr->size () << std::endl; //*
 
   //To clear previous cluster indices
   g_cluster_indices.clear();
 
   g_ec.setClusterTolerance (0.02); // 2cm
-  g_ec.setMinClusterSize (500);
-  g_ec.setMaxClusterSize (5000);
+  g_ec.setMinClusterSize (500); //Minimum set so that half cut cubes are not classified as clusters
+  g_ec.setMaxClusterSize (3000);
   g_ec.setSearchMethod (g_tree_ptr);
   g_ec.setInputCloud (in_cloud_ptr);
   g_ec.extract (g_cluster_indices);
@@ -940,9 +919,9 @@ Cw1Solution::segCylind (PointCPtr &in_cloud_ptr)
   g_extract_pc.setNegative (false);
   g_extract_pc.filter (*g_cloud_cylinder);
   
-  // ROS_INFO_STREAM ("PointCloud representing the cylinder component: "
-  //                  << g_cloud_cylinder->size ()
-  //                  << " data points.");
+  ROS_INFO_STREAM ("PointCloud representing the cylinder component: "
+                   << g_cloud_cylinder->size ()
+                   << " data points.");
   
   return;
 }

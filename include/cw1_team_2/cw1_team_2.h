@@ -264,19 +264,12 @@ class Cw1Solution
     applyVX (PointCPtr &in_cloud_ptr,
              PointCPtr &out_cloud_ptr);
 
-    /** \brief Apply Pass Through filtering.
+             
+    /** \brief Apply Pass Through filtering in x and y axis.
       * 
       * \input[in] in_cloud_ptr the input PointCloud2 pointer
       * \input[out] out_cloud_ptr the output PointCloud2 pointer
       */
-    void
-    cloudPtrFunc (PointCPtr &current_cloud_ptr, PointCPtr &current_cloud_filtered );
-    
-    /** \brief Apply Voxel Grid filtering.
-     * 
-     * \input[in] in_cloud_ptr the input PointCloud2 pointer
-     * \input[out] out_cloud_ptr the output PointCloud2 pointer
-     */
     void
     applyPT (PointCPtr &in_cloud_ptr,
              PointCPtr &out_cloud_ptr);
@@ -431,8 +424,11 @@ class Cw1Solution
     /** \brief Pass Through filter. */
     pcl::PassThrough<PointT> g_pt;
     
-    /** \brief Pass Through min and max threshold sizes. */
-    double g_pt_thrs_min, g_pt_thrs_max;
+    /** \brief Pass Through min and max y threshold sizes. */
+    double g_pt_y_thrs_min, g_pt_y_thrs_max;
+    
+    /** \brief Pass Through min and max x threshold sizes. */
+    double g_pt_x_thrs_min, g_pt_x_thrs_max;
     
     /** \brief Color filter. */
     pcl::ConditionalRemoval<PointT> g_cf;
