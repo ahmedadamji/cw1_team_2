@@ -259,28 +259,18 @@ Cw1Solution::task2Callback(cw1_world_spawner::Task2Service::Request &request,
 
   g_sub_cloud;
 
-  // sleep(5);
+  PointCPtr current_cloud_ptr = g_cloud_ptr;
+ 
+  PointCPtr current_cloud_filtered = g_cloud_filtered;
+  
+  cloudPtrFunc(current_cloud_ptr, current_cloud_filtered);
 
-  // geometry_msgs::Pose moveup;
-  // moveup.position.x = 0.4;
-  // moveup.position.y = 0.4;
-  // moveup.position.z = 0.4;
+  std::vector<geometry_msgs::PointStamped> current_centroids = g_centroids;
 
-  // moveup.orientation.x = -1;
-  // moveup.orientation.y = 0;
-  // moveup.orientation.z = 0;
-  // moveup.orientation.w = 0;
-
-  // bool moveup_success = moveArm(moveup);
-
-  // if (not moveup_success)
-  // {
-  //   ROS_ERROR("move up failed");
-    
-  //   return false;
-  // }
-
-  // sleep(5);
+  if(current_centroids == g_centroids){ //This is after every movement. I was trying to see if it acc stores the centroid. from what
+  //ran, it looks like it stores every single time even when theres no centroid/ cube to get a centroid. either that or the camera is wider than i thought an it can still see the cube
+    ROS_INFO("It stored") ;
+  }
 
   geometry_msgs::Pose scan1;
   scan1.position.x = 0.4;
@@ -294,92 +284,99 @@ Cw1Solution::task2Callback(cw1_world_spawner::Task2Service::Request &request,
 
   bool scan1_success = moveArm(scan1);
 
-  if (not scan1_success)
-  {
-    ROS_ERROR("SCanning failed");
-    
-    return false;
-  }
-
-  ros::Duration(2.0).sleep();
-
-  //MOVE
-
-
   g_pt_thrs_min = 0.0; // PassThrough min thres: Better in a config file
   g_pt_thrs_max = 0.4; // PassThrough max thres: Better in a config file
 
   g_sub_cloud;
 
-  // FIND CENTROIDS HERE
+  current_cloud_ptr = g_cloud_ptr;
+ 
+  current_cloud_filtered = g_cloud_filtered;
+  
+  cloudPtrFunc(current_cloud_ptr, current_cloud_filtered);
 
-  // int size1 = g_centroids.size();
+  std::vector<geometry_msgs::PointStamped> current_centroids2 = g_centroids;
 
-  // for (int i = 0; i <= size1; i++)
-  // {
-  //   centroids.push_back(g_centroids[i]);
-  // }
-
-  // MOVE
-
-  geometry_msgs::Pose scan2;
-  scan2.position.x = 0.4;
-  scan2.position.y = -0.4;
-  scan2.position.z = 0.6;
-
-  scan2.orientation.x = -1;
-  scan2.orientation.y = 0;
-  scan2.orientation.z = 0;
-  scan2.orientation.w = 0;
-
-  bool scan2_success = moveArm(scan2);
-
-  if (not scan2_success)
-  {
-    ROS_ERROR("SCanning failed");
-    
-    return false;
+  if(current_centroids2 == g_centroids){
+    ROS_INFO("It stored") ;
   }
 
-  ros::Duration(2.0).sleep();
 
-  g_pt_thrs_min = -0.4; // PassThrough min thres: Better in a config file
-  g_pt_thrs_max = 0.0; // PassThrough max thres: Better in a config file
+  scan1.position.x += 0.1; // Move forward along the x axis to start scanning the upper row
+  scan1_success = moveArm(scan1);
 
   g_sub_cloud;
 
-  // FIND CENTROIDS HERE
+  current_cloud_ptr = g_cloud_ptr;
+ 
+  current_cloud_filtered = g_cloud_filtered;
+  
+  cloudPtrFunc(current_cloud_ptr, current_cloud_filtered);
 
-  // int size2 = g_centroids.size();
+  std::vector<geometry_msgs::PointStamped> current_centroids3 = g_centroids;
 
-  // for (int i = 0; i <= size2; i++)
-  // {
-  //   centroids.push_back(g_centroids[i]);
-  // }
-
-
-
-
-
-  // geometry_msgs::PointStamped centroid;
-  // centroid.point.x = 0;
-  // centroid.point.y = 0;
-  // centroid.point.z = 0;
-
-  // geometry_msgs::PointStamped centroids[1];
-
-  // centroids[0] = centroid;
-  // response.centroids = centroids;
-
-  // int size3 = centroids.size();
-
-  // for (int i = 0; i <= size3; i++)
-  // {
-  //   std::cout << centroids[i];
-  // }
+  if(current_centroids3 == g_centroids){
+    ROS_INFO("It stored") ;
+  }
 
 
-  response.centroids = centroids;
+  for (int i = 0; i< 8; i++) // Basiclly starts scannign from right to left
+  {
+    scan1.position.y -= 0.1;
+    scan1_success = moveArm(scan1);
+
+    g_sub_cloud;
+
+    current_cloud_ptr = g_cloud_ptr;
+  
+    current_cloud_filtered = g_cloud_filtered;
+    
+    cloudPtrFunc(current_cloud_ptr, current_cloud_filtered);
+
+    current_centroids3 = g_centroids;
+
+    if(current_centroids3 == g_centroids){
+      ROS_INFO("It stored") ;
+    }
+  }
+
+  scan1.position.x -= 0.1; // Move back down to start scanning the lower row
+  scan1_success = moveArm(scan1);
+  g_sub_cloud;
+
+  current_cloud_ptr = g_cloud_ptr;
+
+  current_cloud_filtered = g_cloud_filtered;
+
+  cloudPtrFunc(current_cloud_ptr, current_cloud_filtered);
+
+  current_centroids3 = g_centroids;
+
+  if(current_centroids3 == g_centroids){
+    ROS_INFO("It stored") ;
+  }
+
+  for (int j = 0; j< 5; j++)// Move along the y axis back to the starting position ish
+  {
+    scan1.position.y += 0.1;
+    scan1_success = moveArm(scan1);
+
+    g_sub_cloud;
+
+    current_cloud_ptr = g_cloud_ptr;
+  
+    current_cloud_filtered = g_cloud_filtered;
+    
+    cloudPtrFunc(current_cloud_ptr, current_cloud_filtered);
+
+    current_centroids3 = g_centroids;
+
+    if(current_centroids3 == g_centroids){
+      ROS_INFO("It stored") ;
+    }
+  }
+  
+  
 
 
   
@@ -693,6 +690,45 @@ Cw1Solution::place(geometry_msgs::Point position)
   return true;
 }
 
+void
+Cw1Solution::cloudPtrFunc(PointCPtr &current_cloud_ptr, PointCPtr &current_cloud_filtered )
+{
+  // Perform the filtering
+  applyVX (current_cloud_ptr, current_cloud_filtered);
+  applyPT (current_cloud_ptr, current_cloud_filtered);
+  applyCF (current_cloud_ptr, current_cloud_filtered);
+  
+  // Segment plane and cylinder
+  findNormals (current_cloud_filtered);
+  segPlane (current_cloud_filtered);
+  segClusters (current_cloud_filtered);
+  
+  g_centroids.clear();
+  
+  for (std::vector<pcl::PointIndices>::const_iterator it = g_cluster_indices.begin (); it != g_cluster_indices.end (); ++it)
+  {
+  pcl::PointCloud<PointT>::Ptr cloud_cluster (new pcl::PointCloud<PointT>);
+  for (const auto& idx : it->indices)
+  cloud_cluster->push_back ((*current_cloud_filtered)[idx]); //*
+  cloud_cluster->width = cloud_cluster->size ();
+  cloud_cluster->height = 1;
+  cloud_cluster->is_dense = true;
+  
+  std::cout << "Number of data points in the curent PointCloud cluster: " << cloud_cluster->size () << std::endl;
+  
+  g_current_centroid = findCylPose (cloud_cluster);
+  
+  std::cout << g_current_centroid << std::endl;
+
+  g_centroids.push_back(g_current_centroid);
+
+  
+  
+  }
+  
+  
+  return;
+}
 ////////////FROM PCL TUTORIAL//////////////////////////////
 
 void
@@ -707,42 +743,42 @@ Cw1Solution::cloudCallBackOne
   pcl::fromPCLPointCloud2 (g_pcl_pc, *g_cloud_ptr);
 
   // Perform the filtering
-  applyVX (g_cloud_ptr, g_cloud_filtered);
-  applyPT (g_cloud_ptr, g_cloud_filtered);
-  applyCF (g_cloud_ptr, g_cloud_filtered);
+  // applyVX (g_cloud_ptr, g_cloud_filtered);
+  // applyPT (g_cloud_ptr, g_cloud_filtered);
+  // applyCF (g_cloud_ptr, g_cloud_filtered);
   
-  // Segment plane and cylinder
-  findNormals (g_cloud_filtered);
-  segPlane (g_cloud_filtered);
-  segClusters (g_cloud_filtered);
+  // // Segment plane and cylinder
+  // findNormals (g_cloud_filtered);
+  // segPlane (g_cloud_filtered);
+  // segClusters (g_cloud_filtered);
 
-  g_centroids.clear();
+  // g_centroids.clear();
 
-  for (std::vector<pcl::PointIndices>::const_iterator it = g_cluster_indices.begin (); it != g_cluster_indices.end (); ++it)
-  {
-    pcl::PointCloud<PointT>::Ptr cloud_cluster (new pcl::PointCloud<PointT>);
-    for (const auto& idx : it->indices)
-    cloud_cluster->push_back ((*g_cloud_filtered)[idx]); //*
-    cloud_cluster->width = cloud_cluster->size ();
-    cloud_cluster->height = 1;
-    cloud_cluster->is_dense = true;
+  // for (std::vector<pcl::PointIndices>::const_iterator it = g_cluster_indices.begin (); it != g_cluster_indices.end (); ++it)
+  // {
+  //   pcl::PointCloud<PointT>::Ptr cloud_cluster (new pcl::PointCloud<PointT>);
+  //   for (const auto& idx : it->indices)
+  //   cloud_cluster->push_back ((*g_cloud_filtered)[idx]); //*
+  //   cloud_cluster->width = cloud_cluster->size ();
+  //   cloud_cluster->height = 1;
+  //   cloud_cluster->is_dense = true;
 
-    //std::cout << "Number of data points in the curent PointCloud cluster: " << cloud_cluster->size () << std::endl;
+  //   //std::cout << "Number of data points in the curent PointCloud cluster: " << cloud_cluster->size () << std::endl;
 
-    g_current_centroid = findCylPose (cloud_cluster);
+  //   g_current_centroid = findCylPose (cloud_cluster);
 
-    g_centroids.push_back(g_current_centroid);
+  //   g_centroids.push_back(g_current_centroid);
 
-  }
+  // }
 
-  //segCylind (g_cloud_filtered);
-  //findCylPose (g_cloud_cylinder);
-  findCylPose (g_cloud_filtered);
+  // //segCylind (g_cloud_filtered);
+  // //findCylPose (g_cloud_cylinder);
+  // findCylPose (g_cloud_filtered);
     
-  // Publish the data
-  //ROS_INFO ("Publishing Filtered Cloud 2");
-  pubFilteredPCMsg (g_pub_cloud, *g_cloud_filtered);
-  //pubFilteredPCMsg (g_pub_cloud, *g_cloud_cylinder);
+  // // Publish the data
+  // //ROS_INFO ("Publishing Filtered Cloud 2");
+  // pubFilteredPCMsg (g_pub_cloud, *g_cloud_filtered);
+  // //pubFilteredPCMsg (g_pub_cloud, *g_cloud_cylinder);
   
   return;
 }

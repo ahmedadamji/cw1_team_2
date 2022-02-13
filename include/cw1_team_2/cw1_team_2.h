@@ -270,6 +270,14 @@ class Cw1Solution
       * \input[out] out_cloud_ptr the output PointCloud2 pointer
       */
     void
+    cloudPtrFunc (PointCPtr &current_cloud_ptr, PointCPtr &current_cloud_filtered );
+    
+    /** \brief Apply Voxel Grid filtering.
+     * 
+     * \input[in] in_cloud_ptr the input PointCloud2 pointer
+     * \input[out] out_cloud_ptr the output PointCloud2 pointer
+     */
+    void
     applyPT (PointCPtr &in_cloud_ptr,
              PointCPtr &out_cloud_ptr);
 
@@ -394,7 +402,11 @@ class Cw1Solution
 
     /** \brief All centroids found .................... */
     std::vector<geometry_msgs::PointStamped> g_centroids;
-    
+
+    // std::vector<float> x_centroid;
+    // std::vector<float> y_centroid;
+    // std::vector<float> z_centroid;
+
     /** \brief ROS pose publishers. */
     ros::Publisher g_pub_pose;
     
