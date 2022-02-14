@@ -183,6 +183,15 @@ class Cw1Solution
     task2Callback(cw1_world_spawner::Task2Service::Request &request,
       cw1_world_spawner::Task2Service::Response &response);
 
+    /** \brief ... function for ............. 
+      *
+      * \input[in] ..................
+      *  
+      * \return ......
+      */
+    std::vector<geometry_msgs::PointStamped>
+    findCentroidsAtScanLocation(std::vector<geometry_msgs::PointStamped> centroids);
+
 
     /** \brief Service callback function for ............. 
       *
@@ -264,15 +273,6 @@ class Cw1Solution
     applyVX (PointCPtr &in_cloud_ptr,
              PointCPtr &out_cloud_ptr);
 
-             
-    /** \brief Apply Pass Through filtering in x and y axis.
-      * 
-      * \input[in] in_cloud_ptr the input PointCloud2 pointer
-      * \input[out] out_cloud_ptr the output PointCloud2 pointer
-      */
-    void
-    applyPT (PointCPtr &in_cloud_ptr,
-             PointCPtr &out_cloud_ptr);
 
     /** \brief Apply Color filtering.
       * 
@@ -304,20 +304,13 @@ class Cw1Solution
     void
     segClusters (PointCPtr &in_cloud_ptr);
     
-    /** \brief Segment Cylinder from point cloud.
-      * 
-      * \input[in] in_cloud_ptr the input PointCloud2 pointer
-      */
-    void
-    segCylind (PointCPtr &in_cloud_ptr);
     
-    
-    /** \brief Find the Pose of Cylinder.
+    /** \brief Find the Pose of Cube.
       * 
       * \input[in] in_cloud_ptr the input PointCloud2 pointer
       */
     geometry_msgs::PointStamped
-    findCylPose (PointCPtr &in_cloud_ptr); //set return here
+    findCubePose (PointCPtr &in_cloud_ptr); //set return here
     
     /** \brief Point Cloud publisher.
       * 
@@ -327,14 +320,14 @@ class Cw1Solution
     void
     pubFilteredPCMsg (ros::Publisher &pc_pub, PointC &pc);
     
-    /** \brief Publish the cylinder point.
+    /** \brief Publish the cube point.
       * 
-      *  \input[in] cyl_pt_msg Cylinder's geometry point
+      *  \input[in] cube_pt_msg Cube's geometry point
       *  
       *  \output true if three numbers are added
       */
     void
-    publishPose (geometry_msgs::PointStamped &cyl_pt_msg);
+    publishPose (geometry_msgs::PointStamped &cube_pt_msg);
     
 
 
@@ -388,7 +381,7 @@ class Cw1Solution
     ros::Subscriber g_sub_cloud;
     
     /** \brief ROS geometry message point. */
-    geometry_msgs::PointStamped g_cyl_pt_msg;
+    geometry_msgs::PointStamped g_cube_pt_msg;
 
     /** \brief Current centroid found .................... */
     geometry_msgs::PointStamped g_current_centroid;
@@ -412,6 +405,9 @@ class Cw1Solution
     /** \brief Point Cloud (filtered) pointer. */
     PointCPtr g_cloud_filtered, g_cloud_filtered2;
     
+    /** \brief Point cloud to hold plane and cylinder points. */
+    PointCPtr g_cloud_plane;
+    
     /** \brief Point Cloud (filtered) sensros_msg for publ. */
     sensor_msgs::PointCloud2 g_cloud_filtered_msg;
     
@@ -420,9 +416,6 @@ class Cw1Solution
     
     /** \brief Voxel Grid filter. */
     pcl::VoxelGrid<PointT> g_vx;
-    
-    /** \brief Pass Through filter. */
-    pcl::PassThrough<PointT> g_pt;
     
     /** \brief Pass Through min and max y threshold sizes. */
     double g_pt_y_thrs_min, g_pt_y_thrs_max;
@@ -463,17 +456,9 @@ class Cw1Solution
     /** \brief Point indices for plane. */
     pcl::PointIndices::Ptr g_inliers_plane;
       
-    /** \brief Point indices for cylinder. */
-    pcl::PointIndices::Ptr g_inliers_cylinder;
     
     /** \brief Model coefficients for the plane segmentation. */
     pcl::ModelCoefficients::Ptr g_coeff_plane;
-    
-    /** \brief Model coefficients for the culinder segmentation. */
-    pcl::ModelCoefficients::Ptr g_coeff_cylinder;
-    
-    /** \brief Point cloud to hold plane and cylinder points. */
-    PointCPtr g_cloud_plane, g_cloud_cylinder;
     
     /** \brief cw1Q1: TF listener definition. */
     tf::TransformListener g_listener_;
