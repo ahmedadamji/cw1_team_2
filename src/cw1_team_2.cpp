@@ -248,6 +248,7 @@ Cw1Solution::task2Callback(cw1_world_spawner::Task2Service::Request &request,
   /* This service ... */
   
   std::vector<geometry_msgs::PointStamped> centroids;
+  geometry_msgs::PointStamped centroid;
 
 
   g_cf_red = request.r.data*255;
@@ -274,6 +275,8 @@ Cw1Solution::task2Callback(cw1_world_spawner::Task2Service::Request &request,
   g_pt_x_thrs_min = 0.2;
   g_pt_y_thrs_min = 0.4;
 
+  int size = 0;
+
   for (int i = 1; i <= 2; i++)
   {
       
@@ -288,14 +291,28 @@ Cw1Solution::task2Callback(cw1_world_spawner::Task2Service::Request &request,
 
     g_sub_cloud;
 
-    // PointCPtr current_cloud_ptr = nullptr;
-    // *current_cloud_ptr = *g_cloud_ptr;
-    // PointCPtr current_cloud_filtered = nullptr;
-    // *current_cloud_filtered = *g_cloud_filtered;
-    
-    //cloudPtrFunc(g_cloud_ptr, g_cloud_filtered);
 
-    centroids = g_centroids;
+    size = g_centroids.size();
+
+    if (size > 0)
+    {
+      for (int i = 0; i < size; i++)
+      {
+        centroid = g_centroids[i];
+        double x = centroid.point.x;
+        double y = centroid.point.y;
+
+        //if ((g_pt_x_thrs_min < x < g_pt_x_thrs_max) && (g_pt_y_thrs_min < y < g_pt_y_thrs_max))
+        if (((g_pt_x_thrs_min <= x ) && (x < g_pt_x_thrs_max)) && ((g_pt_y_thrs_min <= y ) && (y < g_pt_y_thrs_max)))
+        {
+          std::cout << "A centroid was found at this location";
+          centroids.push_back(centroid);
+        }
+        //centroids.push_back(g_centroids[i]);
+      }
+
+      //std::cout << g_centroids[i];
+    }
 
     g_pt_x_thrs_min += 0.3;
     scan1.position.x += 0.3; // Move forward along the x axis to start scanning the upper row
@@ -329,16 +346,28 @@ Cw1Solution::task2Callback(cw1_world_spawner::Task2Service::Request &request,
 
     g_sub_cloud;
 
-    // PointCPtr current_cloud_ptr = nullptr;
-    // *current_cloud_ptr = *g_cloud_ptr;
-    // PointCPtr current_cloud_filtered = nullptr;
-    // *current_cloud_filtered = *g_cloud_filtered;
-    
-    //cloudPtrFunc(g_cloud_ptr, g_cloud_filtered);
 
-    g_sub_cloud;
+    size = g_centroids.size();
 
-    centroids = g_centroids;
+    if (size > 0)
+    {
+      for (int i = 0; i < size; i++)
+      {
+        centroid = g_centroids[i];
+        double x = centroid.point.x;
+        double y = centroid.point.y;
+
+        //if ((g_pt_x_thrs_min < x < g_pt_x_thrs_max) && (g_pt_y_thrs_min < y < g_pt_y_thrs_max))
+        if (((g_pt_x_thrs_min <= x ) && (x < g_pt_x_thrs_max)) && ((g_pt_y_thrs_min <= y ) && (y < g_pt_y_thrs_max)))
+        {
+          std::cout << "A centroid was found at this location";
+          centroids.push_back(centroid);
+        }
+        //centroids.push_back(g_centroids[i]);
+      }
+
+      //std::cout << g_centroids[i];
+    }
 
     g_pt_x_thrs_min += 0.3;
     scan2.position.x += 0.3; // Move forward along the x axis to start scanning the upper row
@@ -357,7 +386,7 @@ Cw1Solution::task2Callback(cw1_world_spawner::Task2Service::Request &request,
   scan3.orientation.w = 0;
 
   g_pt_x_thrs_min = 0.2;
-  g_pt_y_thrs_min = -0.4;
+  g_pt_y_thrs_min = -0.8;
 
   for (int i = 1; i <= 2; i++)
   {
@@ -365,7 +394,7 @@ Cw1Solution::task2Callback(cw1_world_spawner::Task2Service::Request &request,
     bool scan3_success = moveArm(scan3);
 
     g_pt_x_thrs_max = g_pt_x_thrs_min + 0.3;
-    g_pt_y_thrs_max = g_pt_y_thrs_min + 0.4;
+    g_pt_y_thrs_max = g_pt_y_thrs_min + 0.8;
 
     g_sub_cloud;
 
@@ -373,23 +402,48 @@ Cw1Solution::task2Callback(cw1_world_spawner::Task2Service::Request &request,
 
     g_sub_cloud;
 
-    // PointCPtr current_cloud_ptr = nullptr;
-    // *current_cloud_ptr = *g_cloud_ptr;
-    // PointCPtr current_cloud_filtered = nullptr;
-    // *current_cloud_filtered = *g_cloud_filtered;
-    
-    //cloudPtrFunc(g_cloud_ptr, g_cloud_filtered);
+    size = g_centroids.size();
 
-    centroids = g_centroids;
+    if (size > 0)
+    {
+      for (int i = 0; i < size; i++)
+      {
+        centroid = g_centroids[i];
+        double x = centroid.point.x;
+        double y = centroid.point.y;
+
+        //if ((g_pt_x_thrs_min < x < g_pt_x_thrs_max) && (g_pt_y_thrs_min < y < g_pt_y_thrs_max))
+        if (((g_pt_x_thrs_min <= x ) && (x < g_pt_x_thrs_max)) && ((g_pt_y_thrs_min <= y ) && (y < g_pt_y_thrs_max)))
+        {
+          std::cout << "A centroid was found at this location";
+          centroids.push_back(centroid);
+        }
+        //centroids.push_back(g_centroids[i]);
+      }
+
+      //std::cout << g_centroids[i];
+    }
 
     g_pt_x_thrs_min += 0.3;
     scan3.position.x += 0.3; // Move forward along the x axis to start scanning the upper row
 
   }
-  
-  //std::cout << g_centroids[0];
 
-  
+
+
+  size = centroids.size();
+
+  if (size > 0)
+  {
+      for (int i = 0; i < size; i++)
+      {
+        std::cout << "This is centroid " + char(i)  << std::endl;;
+        std::cout << centroids[i];
+      }
+  }
+
+  response.centroids = centroids;
+
 
 
   
@@ -719,7 +773,7 @@ Cw1Solution::cloudCallBackOne
 
   // Perform the filtering
   applyVX (g_cloud_ptr, g_cloud_filtered);
-  applyPT (g_cloud_ptr, g_cloud_filtered);
+  ///applyPT (g_cloud_ptr, g_cloud_filtered);
   applyCF (g_cloud_ptr, g_cloud_filtered);
   
   // Segment plane and cylinder
@@ -797,23 +851,23 @@ Cw1Solution::applyCF (PointCPtr &in_cloud_ptr,
   //Try to refer to this: http://docs.ros.org/en/hydro/api/pcl/html/namespacepcl_1_1ComparisonOps.html#a4b6372faf48ab0857b5e9ad5fd826361
 
   // Lower bound
-  pcl::PackedRGBComparison<PointT>::Ptr lb_red(new pcl::PackedRGBComparison<PointT>("r", pcl::ComparisonOps::GT, g_cf_red-20));
+  pcl::PackedRGBComparison<PointT>::ConstPtr lb_red(new pcl::PackedRGBComparison<PointT>("r", pcl::ComparisonOps::GT, g_cf_red-25.5));
   condition->addComparison (lb_red);
 
-  pcl::PackedRGBComparison<PointT>::Ptr lb_green(new pcl::PackedRGBComparison<PointT>("g", pcl::ComparisonOps::GT, g_cf_green-20));
+  pcl::PackedRGBComparison<PointT>::ConstPtr lb_green(new pcl::PackedRGBComparison<PointT>("g", pcl::ComparisonOps::GT, g_cf_green-25.5));
   condition->addComparison (lb_green);
 
-  pcl::PackedRGBComparison<PointT>::Ptr lb_blue(new pcl::PackedRGBComparison<PointT>("b", pcl::ComparisonOps::GT, g_cf_blue-20));
+  pcl::PackedRGBComparison<PointT>::ConstPtr lb_blue(new pcl::PackedRGBComparison<PointT>("b", pcl::ComparisonOps::GT, g_cf_blue-25.5));
   condition->addComparison (lb_blue);
 
   // Upper bound
-  pcl::PackedRGBComparison<PointT>::Ptr ub_red(new pcl::PackedRGBComparison<PointT>("r", pcl::ComparisonOps::LT, g_cf_red+20));
+  pcl::PackedRGBComparison<PointT>::ConstPtr ub_red(new pcl::PackedRGBComparison<PointT>("r", pcl::ComparisonOps::LT, g_cf_red+25.5));
   condition->addComparison (ub_red);
 
-  pcl::PackedRGBComparison<PointT>::Ptr ub_green(new pcl::PackedRGBComparison<PointT>("g", pcl::ComparisonOps::LT, g_cf_green+20));
+  pcl::PackedRGBComparison<PointT>::ConstPtr ub_green(new pcl::PackedRGBComparison<PointT>("g", pcl::ComparisonOps::LT, g_cf_green+25.5));
   condition->addComparison (ub_green);
 
-  pcl::PackedRGBComparison<PointT>::Ptr ub_blue(new pcl::PackedRGBComparison<PointT>("b", pcl::ComparisonOps::LT, g_cf_blue+20));
+  pcl::PackedRGBComparison<PointT>::ConstPtr ub_blue(new pcl::PackedRGBComparison<PointT>("b", pcl::ComparisonOps::LT, g_cf_blue+25.5));
   condition->addComparison (ub_blue);
 
   g_cf.setInputCloud (in_cloud_ptr);
