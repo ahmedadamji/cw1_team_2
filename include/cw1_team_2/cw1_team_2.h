@@ -163,46 +163,72 @@ class Cw1Solution
     pickCallback(cw1_team_2::pick::Request &request,
       cw1_team_2::pick::Response &response);
 
-    /** \brief Service callback function for ............. 
+    /** \brief Point Cloud CallBack function.
+      * 
+      * \input[in] cloud_input a PointCloud2 sensor_msgs const pointer
+      */
+    void
+    cloudCallBackOne (const sensor_msgs::PointCloud2ConstPtr& cloud_input_msg);
+
+    /** \brief Service callback function for entire task 1 
       *
-      * \input[in] request service request ...............
+      * used for picking and placing at given position 
+      * 
+      * \input[in] request service request message
+      * \input[in] response service response message
       *  
-      * \return true if .....................
+      * \return true if service succeeds
       */
     bool 
     task1Callback(cw1_world_spawner::Task1Service::Request &request,
       cw1_world_spawner::Task1Service::Response &response);
 
-    /** \brief Service callback function for ............. 
+    /** \brief Service callback function for task 2 
       *
-      * \input[in] request service request ...............
+      * used for object detection and localization
+      * 
+      * \input[in] request service request message
+      * \input[in] response service response message
       *  
-      * \return true if .....................
+      * \return true if service succeeds
       */
     bool 
     task2Callback(cw1_world_spawner::Task2Service::Request &request,
       cw1_world_spawner::Task2Service::Response &response);
 
-    /** \brief ... function for ............. 
+      /** \brief Service callback function for task 3
       *
-      * \input[in] ..................
+      * used for picking multiple objects of the same colour
+      * 
+      * \input[in] request service request message
+      * \input[in] response service response message
       *  
-      * \return ......
-      */
-    std::vector<geometry_msgs::PointStamped>
-    findCentroidsAtScanLocation(std::vector<geometry_msgs::PointStamped> centroids);
-
-
-    /** \brief Service callback function for ............. 
-      *
-      * \input[in] request service request ...............
-      *  
-      * \return true if .....................
+      * \return true if service succeeds
       */
     bool 
     task3Callback(cw1_world_spawner::Task3Service::Request &request,
       cw1_world_spawner::Task3Service::Response &response);
 
+    /** \brief function to find and store centroid found during scanning
+      *
+      * \input[in] container to store the centroids
+      *  
+      * \return the centroid found during scan of a particular area
+      */
+    std::vector<geometry_msgs::PointStamped>
+    findCentroidsAtScanLocation(std::vector<geometry_msgs::PointStamped> centroids);
+
+    /** \brief function to specify scan area
+      *
+      * \input[in] container to store pose of scan area
+      * \input[in] coordinate x of scan area
+      * \input[in] coordinate y of scan area
+      * \input[in] coordinate z of scan area
+      * \return the coordinate of the scan area
+      */
+    geometry_msgs::Pose
+    scan(geometry_msgs::Pose scan_num, float x, float y, float z);
+      
 
     /** \brief MoveIt function for moving the move_group to the target position.
       *
@@ -254,15 +280,6 @@ class Cw1Solution
       */
     bool
     place(geometry_msgs::Point position);
-
-    // FROM PCL TUTORIAL -->
-
-    /** \brief Point Cloud CallBack function.
-      * 
-      * \input[in] cloud_input a PointCloud2 sensor_msgs const pointer
-      */
-    void
-    cloudCallBackOne (const sensor_msgs::PointCloud2ConstPtr& cloud_input_msg);
     
     /** \brief Apply Voxel Grid filtering.
       * 
@@ -272,7 +289,6 @@ class Cw1Solution
     void
     applyVX (PointCPtr &in_cloud_ptr,
              PointCPtr &out_cloud_ptr);
-
 
     /** \brief Apply Color filtering.
       * 
@@ -297,14 +313,21 @@ class Cw1Solution
     void
     segPlane (PointCPtr &in_cloud_ptr);
 
+    
+    /** \brief Extract inliers from input point cloud.
+      * 
+      * \input[in] in_cloud_ptr the input PointCloud2 pointer
+      */
+    void
+    extractInlier (PointCPtr &in_cloud_ptr);
+
     /** \brief Segment clusters from point cloud.
       * 
       * \input[in] in_cloud_ptr the input PointCloud2 pointer
       */
     void
     segClusters (PointCPtr &in_cloud_ptr);
-    
-    
+
     /** \brief Find the Pose of Cube.
       * 
       * \input[in] in_cloud_ptr the input PointCloud2 pointer
@@ -465,6 +488,9 @@ class Cw1Solution
     
     /** \brief SOMETHING........... */
     std::vector<pcl::PointIndices> g_cluster_indices;
+    
+    /** \brief SOMETHING........... */
+    std::vector<geometry_msgs::PointStamped> centroids;
 
 
 

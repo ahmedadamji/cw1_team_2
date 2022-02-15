@@ -188,8 +188,6 @@ Cw1Solution::task1Callback(cw1_world_spawner::Task1Service::Request &request,
   //ROS_INFO("This function is running");
 
 
-
-
   geometry_msgs::Point floor_origin;
   floor_origin.x = 0.0;
   floor_origin.y = 0.0;
@@ -208,7 +206,7 @@ Cw1Solution::task1Callback(cw1_world_spawner::Task1Service::Request &request,
   floor_orientation.w = 1.0;
 
   
-  addCollisionObject("cube",floor_origin,floor_dimension,floor_orientation);
+  addCollisionObject("cube_1",floor_origin,floor_dimension,floor_orientation);
 
 
   geometry_msgs::Point box_origin;
@@ -229,7 +227,7 @@ Cw1Solution::task1Callback(cw1_world_spawner::Task1Service::Request &request,
   box_orientation.w = 1.0;
 
   
-  addCollisionObject("cube",box_origin,box_dimension,box_orientation);
+  addCollisionObject("cube_2",box_origin,box_dimension,box_orientation);
 
 
   bool pick_success = pick(request.object_loc.pose.position);
@@ -267,8 +265,7 @@ Cw1Solution::task2Callback(cw1_world_spawner::Task2Service::Request &request,
 {
   /* This service ... */
   
-  std::vector<geometry_msgs::PointStamped> centroids;
-  geometry_msgs::PointStamped centroid;
+  centroids.clear();
 
   int size = 0;
 
@@ -290,11 +287,7 @@ Cw1Solution::task2Callback(cw1_world_spawner::Task2Service::Request &request,
   scan_orientation.w = 0.0;
 
   geometry_msgs::Pose scan1;
-  
-  scan1.position.x = 0.50;
-  scan1.position.y = 0.35;
-  scan1.position.z = 0.6;
-  
+  scan1 = scan(scan1, 0.5, 0.35, 0.6); 
   scan1.orientation = scan_orientation;
   
   g_pt_x_thrs_min = 0.2;
@@ -309,11 +302,7 @@ Cw1Solution::task2Callback(cw1_world_spawner::Task2Service::Request &request,
     
   
   geometry_msgs::Pose scan2;
-  
-  scan2.position.x = 0.50;
-  scan2.position.y = 0.00;
-  scan2.position.z = 0.6;
-  
+  scan2 = scan(scan2, 0.5, 0.0, 0.6); 
   scan2.orientation = scan_orientation;
   
   g_pt_x_thrs_min = 0.2;
@@ -328,10 +317,8 @@ Cw1Solution::task2Callback(cw1_world_spawner::Task2Service::Request &request,
     
   
   geometry_msgs::Pose scan3;
-  
-  scan3.position.x = 0.50;
-  scan3.position.y = -0.35;
-  scan3.position.z = 0.6;
+  scan3 = scan(scan3, 0.5, -0.35, 0.6); 
+
   
   scan3.orientation = scan_orientation;
   
@@ -376,9 +363,9 @@ Cw1Solution::task3Callback(cw1_world_spawner::Task3Service::Request &request,
 {
 
   /* This service ... */
-  
-  std::vector<geometry_msgs::PointStamped> centroids;
+  // geometry_msgs::Pose;
 
+  centroids.clear();
 
   g_cf_red = request.r.data*255;
   g_cf_green = request.g.data*255;
@@ -407,7 +394,7 @@ Cw1Solution::task3Callback(cw1_world_spawner::Task3Service::Request &request,
   floor_orientation.w = 1.0;
 
   
-  addCollisionObject("cube",floor_origin,floor_dimension,floor_orientation);
+  addCollisionObject("cube_1",floor_origin,floor_dimension,floor_orientation);
 
 
   geometry_msgs::Point box_origin;
@@ -428,7 +415,7 @@ Cw1Solution::task3Callback(cw1_world_spawner::Task3Service::Request &request,
   box_orientation.w = 1.0;
 
   
-  addCollisionObject("cube",box_origin,box_dimension,box_orientation);
+  addCollisionObject("cube_2",box_origin,box_dimension,box_orientation);
 
 
   int size = 0;
@@ -439,83 +426,39 @@ Cw1Solution::task3Callback(cw1_world_spawner::Task3Service::Request &request,
   scan_orientation.y = 0.0;
   scan_orientation.z = 0.0;
   scan_orientation.w = 0.0;
+  
 
   /* This service ... */
+  // CHANGE g_pt;
 
-  // Scanning for the blue boxes at the 1st scan location:
+  float x_scan = 0.5;
+  float x_thrs_min = 0.20;
+  float y_scan = 0.3;
+  float y_thrs_min = 0.15;
+
+  // Scanning for the blue boxes at the first 3 scan locations:
   geometry_msgs::Pose scan1;
-  
-  scan1.position.x = 0.50;
-  scan1.position.y = 0.30;
-  scan1.position.z = 0.6;
-  
-  scan1.orientation = scan_orientation;
-  
-  g_pt_x_thrs_min = 0.20;
-  g_pt_y_thrs_min = 0.15;
-  g_pt_x_thrs_max = g_pt_x_thrs_min + 0.6;
-  g_pt_y_thrs_max = g_pt_y_thrs_min + 0.3;
-  
-  bool scan1_success = moveArm(scan1);
-  
-  centroids = findCentroidsAtScanLocation(centroids);
+  for (int i = 0; i < 3; i++)
+  {
+    scan1 = scan(scan1, x_scan, y_scan, 0.6);
+    scan1.orientation = scan_orientation;
+    g_pt_x_thrs_min = x_thrs_min;
+    g_pt_y_thrs_min = y_thrs_min;
+    g_pt_x_thrs_max = g_pt_x_thrs_min + 0.6;
+    g_pt_y_thrs_max = g_pt_y_thrs_min + 0.3;
     
-  
-  
-  
-  // Scanning for the blue boxes at the 2nd scan location:
-  geometry_msgs::Pose scan2;
-  
-  scan2.position.x = 0.50;
-  scan2.position.y = 0.00;
-  scan2.position.z = 0.6;
-  
-  scan2.orientation = scan_orientation;
-  
-  g_pt_x_thrs_min = 0.2;
-  g_pt_y_thrs_min = -0.15;
-  g_pt_x_thrs_max = g_pt_x_thrs_min + 0.6;
-  g_pt_y_thrs_max = g_pt_y_thrs_min + 0.3;
-  
-  bool scan2_success = moveArm(scan2);
-  
-  centroids = findCentroidsAtScanLocation(centroids);
+    bool scan1_success = moveArm(scan1);
     
-  
-  
-  
-  // Scanning for the blue boxes at the 3rd scan location:
-  geometry_msgs::Pose scan3;
-  
-  scan3.position.x = 0.50;
-  scan3.position.y = -0.3;
-  scan3.position.z = 0.6;
-  
-  scan3.orientation = scan_orientation;
-  
-  g_pt_x_thrs_min = 0.2;
-  g_pt_y_thrs_min = -0.45;
-  g_pt_x_thrs_max = g_pt_x_thrs_min + 0.6;
-  g_pt_y_thrs_max = g_pt_y_thrs_min + 0.3;
+    centroids = findCentroidsAtScanLocation(centroids);
     
-  bool scan3_success = moveArm(scan3);
-
-  centroids = findCentroidsAtScanLocation(centroids);
-  
-
-  // scan3.position.x += 0.3; // Move forward along the x axis to start scanning the upper row
-
-  
+    y_scan -= 0.3;
+    y_thrs_min -= 0.3;
+  }
   
   // Scanning for the blue boxes at the 4th scan location:
   geometry_msgs::Pose scan4;
-  
-  scan4.position.x = 0.233;
-  scan4.position.y = -0.3;
-  scan4.position.z = 0.6;
-  
+  scan4 = scan(scan4, 0.233, -0.3, 0.6);
   scan4.orientation = scan_orientation;
-  
   g_pt_x_thrs_min = 0.1;
   g_pt_y_thrs_min = -0.45;
   g_pt_x_thrs_max = g_pt_x_thrs_min + 0.1;
@@ -525,17 +468,11 @@ Cw1Solution::task3Callback(cw1_world_spawner::Task3Service::Request &request,
   
   centroids = findCentroidsAtScanLocation(centroids);
 
-
   
   // Scanning for the blue boxes at the 5th scan location:
   geometry_msgs::Pose scan5;
-  
-  scan5.position.x = -0.033;
-  scan5.position.y = -0.3;
-  scan5.position.z = 0.6;
-  
+  scan5 = scan(scan5, -0.033, -0.3, 0.6); 
   scan5.orientation = scan_orientation;
-  
   g_pt_x_thrs_min = -0.1;
   g_pt_y_thrs_min = -0.45;
   g_pt_x_thrs_max = g_pt_x_thrs_min + 0.2;
@@ -548,11 +485,7 @@ Cw1Solution::task3Callback(cw1_world_spawner::Task3Service::Request &request,
   
   // Scanning for the blue boxes at the 6th scan location:
   geometry_msgs::Pose scan6;
-  
-  scan6.position.x = -0.3;
-  scan6.position.y = -0.3;
-  scan6.position.z = 0.6;
-  
+  scan6 = scan(scan6, -0.3, -0.3, 0.6); 
   scan6.orientation = scan_orientation;
   
   g_pt_x_thrs_min = -0.8;
@@ -568,17 +501,12 @@ Cw1Solution::task3Callback(cw1_world_spawner::Task3Service::Request &request,
   
   // Scanning for the blue boxes at the 7th scan location:
   geometry_msgs::Pose scan7;
-  
-  scan7.position.x = -0.3;
-  scan7.position.y = 0.0;
-  scan7.position.z = 0.6;
-  
+  scan7 = scan(scan7, -0.3, 0.0, 0.6); 
   scan7.orientation = scan_orientation;
   g_pt_x_thrs_min = -0.8;
   g_pt_y_thrs_min = -0.15;
   g_pt_x_thrs_max = g_pt_x_thrs_min + 0.70;
   g_pt_y_thrs_max = g_pt_y_thrs_min + 0.30;
-
     
   bool scan7_success = moveArm(scan7);
   
@@ -587,13 +515,8 @@ Cw1Solution::task3Callback(cw1_world_spawner::Task3Service::Request &request,
   
   // Scanning for the blue boxes at the 8th scan location:
   geometry_msgs::Pose scan8;
-  
-  scan8.position.x = -0.3;
-  scan8.position.y = 0.3;
-  scan8.position.z = 0.6;
-  
+  scan8 = scan(scan8, -0.3, 0.3, 0.6); 
   scan8.orientation = scan_orientation;
-  
   g_pt_x_thrs_min = -0.8;
   g_pt_y_thrs_min = 0.15;
   g_pt_x_thrs_max = g_pt_x_thrs_min + 0.70;
@@ -602,18 +525,12 @@ Cw1Solution::task3Callback(cw1_world_spawner::Task3Service::Request &request,
   bool scan8_success = moveArm(scan8);
   
   centroids = findCentroidsAtScanLocation(centroids);
-
-
+  
 
   // Scanning for the blue boxes at the 9th scan location:
   geometry_msgs::Pose scan9;
-  
-  scan9.position.x = -0.033;
-  scan9.position.y = 0.3;
-  scan9.position.z = 0.6;
-  
-  scan9.orientation = scan_orientation;
-  
+  scan9 = scan(scan9, -0.033, 0.3, 0.6); 
+  scan9.orientation = scan_orientation; 
   g_pt_x_thrs_min = -0.1;
   g_pt_y_thrs_min = 0.15;
   g_pt_x_thrs_max = g_pt_x_thrs_min + 0.20;
@@ -626,13 +543,8 @@ Cw1Solution::task3Callback(cw1_world_spawner::Task3Service::Request &request,
 
   // Scanning for the blue boxes at the 10th scan location:
   geometry_msgs::Pose scan10;
-  
-  scan10.position.x = 0.233;
-  scan10.position.y = 0.3;
-  scan10.position.z = 0.6;
-  
+  scan10 = scan(scan10, 0.233, 0.3, 0.6); 
   scan10.orientation = scan_orientation;
-  
   g_pt_x_thrs_min = 0.1;
   g_pt_y_thrs_min = 0.15;
   g_pt_x_thrs_max = g_pt_x_thrs_min + 0.10;
@@ -641,6 +553,7 @@ Cw1Solution::task3Callback(cw1_world_spawner::Task3Service::Request &request,
   bool scan10_success = moveArm(scan10);
   
   centroids = findCentroidsAtScanLocation(centroids);
+
 
 
   // Make function for pick and place, pass in goal location and all centroids
@@ -685,7 +598,6 @@ Cw1Solution::task3Callback(cw1_world_spawner::Task3Service::Request &request,
       }
   }
 
-
   
   return true;
 }
@@ -712,6 +624,7 @@ Cw1Solution::findCentroidsAtScanLocation(std::vector<geometry_msgs::PointStamped
       if (((g_pt_x_thrs_min <= x ) && (x < g_pt_x_thrs_max)) && ((g_pt_y_thrs_min <= y ) && (y < g_pt_y_thrs_max)))
       {
         std::cout << "A centroid was found at this location";
+        ROS_INFO("A centroid was found at this location");
         centroids.push_back(centroid);
       }
     }
@@ -721,6 +634,17 @@ Cw1Solution::findCentroidsAtScanLocation(std::vector<geometry_msgs::PointStamped
 
 }
 
+///////////////////////////////////////////////////////////////////////////////
+geometry_msgs::Pose
+Cw1Solution::scan(geometry_msgs::Pose scan_num, float x, float y, float z)
+{
+  
+  scan_num.position.x = x;
+  scan_num.position.y = y;
+  scan_num.position.z = z;
+  
+  return scan_num;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1011,7 +935,6 @@ Cw1Solution::cloudCallBackOne
 
   // Perform the filtering
   applyVX (g_cloud_ptr, g_cloud_filtered);
-  ///applyPT (g_cloud_ptr, g_cloud_filtered);
   applyCF (g_cloud_ptr, g_cloud_filtered);
   
   // Segment plane and cube
@@ -1030,7 +953,7 @@ Cw1Solution::cloudCallBackOne
     cloud_cluster->height = 1;
     cloud_cluster->is_dense = true;
 
-    std::cout << "Number of data points in the curent PointCloud cluster: " << cloud_cluster->size () << std::endl;
+    ROS_INFO("Number of data points in the curent PointCloud cluster: ", cloud_cluster->size () );
 
     g_current_centroid = findCubePose (cloud_cluster);
 
@@ -1038,8 +961,6 @@ Cw1Solution::cloudCallBackOne
 
   }
 
-  //segCylind (g_cloud_filtered);
-  //findCylPose (g_cloud_cylinder);
   findCubePose (g_cloud_filtered);
     
   // Publish the data
@@ -1127,29 +1048,13 @@ Cw1Solution::segPlane (PointCPtr &in_cloud_ptr)
   g_seg.setDistanceThreshold (0.03); //bad style
   g_seg.setInputCloud (in_cloud_ptr);
   g_seg.setInputNormals (g_cloud_normals);
+
   // Obtain the plane inliers and coefficients
   g_seg.segment (*g_inliers_plane, *g_coeff_plane);
-  
-  // Extract the planar inliers from the input cloud
-  g_extract_pc.setInputCloud (in_cloud_ptr);
-  g_extract_pc.setIndices (g_inliers_plane);
-  g_extract_pc.setNegative (false);
-  
-  // Write the planar inliers to disk
-  g_extract_pc.filter (*g_cloud_plane);
-  
-  // Remove the planar inliers, extract the rest
-  g_extract_pc.setNegative (true);
-  g_extract_pc.filter (*g_cloud_filtered2);
-  g_extract_normals.setNegative (true);
-  g_extract_normals.setInputCloud (g_cloud_normals);
-  g_extract_normals.setIndices (g_inliers_plane);
-  g_extract_normals.filter (*g_cloud_normals2);
 
-  // ROS_INFO_STREAM ("Plane coefficients: " << *g_coeff_plane);
-  // ROS_INFO_STREAM ("PointCloud representing the planar component: "
-  //                  << g_cloud_plane->size ()
-  //                  << " data points.");
+
+  Cw1Solution::extractInlier (in_cloud_ptr);
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1171,6 +1076,28 @@ Cw1Solution::segClusters (PointCPtr &in_cloud_ptr)
 
 }
 
+////////////////////////////////////////////////////////////////////////////////
+void
+Cw1Solution::extractInlier (PointCPtr &in_cloud_ptr)
+{
+  
+  // Extract the planar inliers from the input cloud
+  g_extract_pc.setInputCloud (in_cloud_ptr);
+  g_extract_pc.setIndices (g_inliers_plane);
+  g_extract_pc.setNegative (false);
+  
+  // Write the planar inliers to disk
+  g_extract_pc.filter (*g_cloud_plane);
+  
+  // Remove the planar inliers, extract the rest
+  g_extract_pc.setNegative (true);
+  g_extract_pc.filter (*g_cloud_filtered2);
+  g_extract_normals.setNegative (true);
+  g_extract_normals.setInputCloud (g_cloud_normals);
+  g_extract_normals.setIndices (g_inliers_plane);
+  g_extract_normals.filter (*g_cloud_normals2);
+
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 geometry_msgs::PointStamped
