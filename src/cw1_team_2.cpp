@@ -57,16 +57,16 @@ Cw1Solution::Cw1Solution (ros::NodeHandle &nh):
   g_pub_cloud = g_nh.advertise<sensor_msgs::PointCloud2> ("filtered_cloud", 1, true);
   g_pub_pose = g_nh.advertise<geometry_msgs::PointStamped> ("cube_pt", 1, true);
   
-  // Define public variables
-  g_vg_leaf_sz = 0.01; // VoxelGrid leaf size: Better in a config file
-  g_x_thrs_min = -0.7; // PassThrough min thres: Better in a config file
-  g_x_thrs_max = -0.5; // PassThrough max thres: Better in a config file
-  g_y_thrs_min = 0.0; // PassThrough min thres: Better in a config file
-  g_y_thrs_max = 0.4; // PassThrough max thres: Better in a config file
-  g_cf_red = 25.5; // Colour Filter Red Value: Better in a config file
-  g_cf_blue = 204; // Colour Filter Blue Value: Better in a config file
-  g_cf_green = 25.5; // Colour Filter Green Value: Better in a config file
-  g_k_nn = 50; // Normals nn size: Better in a config file
+  // Initialize public variables
+  g_vg_leaf_sz = 0.01;
+  g_x_thrs_min = -0.7; 
+  g_x_thrs_max = -0.5;
+  g_y_thrs_min = 0.0;
+  g_y_thrs_max = 0.4;
+  g_cf_red = 25.5;
+  g_cf_blue = 204;
+  g_cf_green = 25.5;
+  g_k_nn = 50;
 
   // namespace for our ROS services, they will appear as "/namespace/srv_name"
   std::string service_ns = "/cw1_team_2";
@@ -96,53 +96,10 @@ Cw1Solution::task1Callback(cw1_world_spawner::Task1Service::Request &request,
   cw1_world_spawner::Task1Service::Response &response)
 {
   /* This service picks an object with a given pose and places it at a given pose */
-
-// this is used in defining the origin of the floor collision object
-  geometry_msgs::Point floor_origin;
-  floor_origin.x = 0.0;
-  floor_origin.y = 0.0;
-  floor_origin.z = 0.0;
-
-// this is used in defining the dimension of the floor collision object
-  geometry_msgs::Vector3 floor_dimension;
-  floor_dimension.x = 3;
-  floor_dimension.y = 3;
-  floor_dimension.z = 0.001;
-
-// this is used in defining the orientation of the floor collision object
-  geometry_msgs::Quaternion floor_orientation;
   
-  floor_orientation.x = 0.0;
-  floor_orientation.y = 0.0;
-  floor_orientation.z = 0.0;
-  floor_orientation.w = 1.0;
-
-  // function call to add a floor collision object with the arguments defined above/
-  addCollisionObject("cube_1",floor_origin,floor_dimension,floor_orientation);
-
-  // this is used in defining the origin of box collision object
-  geometry_msgs::Point box_origin;
-  box_origin.x = request.goal_loc.point.x;
-  box_origin.y = request.goal_loc.point.y;
-  box_origin.z = 0;
-
-  // this is used in defining the dimension of the box collision object
-  geometry_msgs::Vector3 box_dimension;
-  box_dimension.x = 0.22;
-  box_dimension.y = 0.22;
-  box_dimension.z = 0.45;
-
-  // this is used in defining the orientation of the box collision object
-  geometry_msgs::Quaternion box_orientation;
+  //function call to add a floor and goal basket collision objects/
+  addFloorAndBoxCollisionObjects(request.goal_loc);
   
-  box_orientation.x = 0.0;
-  box_orientation.y = 0.0;
-  box_orientation.z = 0.0;
-  box_orientation.w = 1.0;
-
-  // function call to add a box collision object with the arguments defined above
-  addCollisionObject("cube_2",box_origin,box_dimension,box_orientation);
-
   // function call to pick an object at the desired coordinate
   bool pick_success = pick(request.object_loc.pose.position);
 
@@ -230,8 +187,8 @@ Cw1Solution::task2Callback(cw1_world_spawner::Task2Service::Request &request,
     centroids = findCentroidsAtScanLocation(centroids);
     
     //updating the scan area for the next iteration
-    y_scan -= 0.30;
-    y_thrs_min -= 0.35;
+    y_scan -= 0.35;
+    y_thrs_min -= 0.30;
   }
 
   response.centroids = centroids;
@@ -262,59 +219,14 @@ Cw1Solution::task3Callback(cw1_world_spawner::Task3Service::Request &request,
   std::cout << "blue: " << g_cf_blue << std::endl;
 
 
-  // this is used in defining the origin of the floor collision object
-  geometry_msgs::Point floor_origin;
-  floor_origin.x = 0.0;
-  floor_origin.y = 0.0;
-  floor_origin.z = 0.0;
-
-  // this is used in defining the dimension of the floor collision object
-  geometry_msgs::Vector3 floor_dimension;
-  floor_dimension.x = 3;
-  floor_dimension.y = 3;
-  floor_dimension.z = 0.001;
-
-  // this is used in defining the orientation of the floor collision object
-  geometry_msgs::Quaternion floor_orientation;
-  
-  floor_orientation.x = 0.0;
-  floor_orientation.y = 0.0;
-  floor_orientation.z = 0.0;
-  floor_orientation.w = 1.0;
-
-  // function call to add a floor collision object with the arguments defined above  
-  addCollisionObject("cube_1",floor_origin,floor_dimension,floor_orientation);
-
-  // this is used in defining the origin of box collision object
-  geometry_msgs::Point box_origin;
-  box_origin.x = request.goal_loc.point.x;
-  box_origin.y = request.goal_loc.point.y;
-  box_origin.z = 0;
-
-  // this is used in defining the dimension of the box collision object
-  geometry_msgs::Vector3 box_dimension;
-  box_dimension.x = 0.22;
-  box_dimension.y = 0.22;
-  box_dimension.z = 0.45;
-
-  // this is used in defining the orientation of the box collision object
-  geometry_msgs::Quaternion box_orientation;
-  
-  box_orientation.x = 0.0;
-  box_orientation.y = 0.0;
-  box_orientation.z = 0.0;
-  box_orientation.w = 1.0;
-
-  // function call to add a box collision object with the arguments defined above  
-  addCollisionObject("cube_2",box_origin,box_dimension,box_orientation);
+  //function call to add a floor and goal basket collision objects/
+  addFloorAndBoxCollisionObjects(request.goal_loc);
 
 
-  int size = 0;
-  
   //initializing variable to scan an area of the robot arm environment
   float x_scan = 0.5;
   float x_thrs_min = 0.20;
-  float y_scan = 0.3;
+  float y_scan = 0.35;
   float y_thrs_min = 0.15;
 
   // Scanning for the blue boxes at the first 3 scan locations:
@@ -340,7 +252,7 @@ Cw1Solution::task3Callback(cw1_world_spawner::Task3Service::Request &request,
     centroids = findCentroidsAtScanLocation(centroids);
     
     //updating the scan area for the next iteration
-    y_scan -= 0.3;
+    y_scan -= 0.35;
     y_thrs_min -= 0.3;
   }
   
@@ -502,53 +414,7 @@ Cw1Solution::task3Callback(cw1_world_spawner::Task3Service::Request &request,
   //storing the centroids founds in scan area to the initialized centroids variable
   centroids = findCentroidsAtScanLocation(centroids);
 
-  //store the number of centroids in centroid list
-  size = centroids.size();
-
-  //setting a condition to go through all the centroids as long as there are centroids in the list
-  if (size > 0)
-  {
-      //looping through all the centroids
-      for (int i = 0; i < size; i++)
-      {
-        std::cout << "We are now trying to pick cube:  " + std::to_string(i)  << std::endl;;
-        
-        //initializing a variable to store the coordinates of each centroid found
-        geometry_msgs::Point position;
-        position.x = (round(centroids[i].point.x * pow(10.0f, (2.0))) / pow(10.0f, (2.0)));
-        position.y = (round(centroids[i].point.y * pow(10.0f, (2.0))) / pow(10.0f, (2.0)));
-        position.z = 0.02; 
-
-        // function call to pick an object at the desired coordinate
-        bool pick_success = pick(position);
-
-        if (not pick_success) 
-        {
-          ROS_ERROR("Object Pick up  failed");
-
-          return false;
-        }
-
-        //initializing a variable to store the coordinates of the goal location(where the cube is to be placed)
-        geometry_msgs::Point target_point;
-        target_point.x = request.goal_loc.point.x;
-        target_point.y = request.goal_loc.point.y;
-        target_point.z = request.goal_loc.point.z+0.1;
-
-        // Function call to place the object picked inside the basket
-        bool move_success = place(target_point);
-
-        if (not move_success)
-        {
-          ROS_ERROR("Placing the object failed");
-          
-          return false;
-        }
-
-
-      }
-  }
-
+  bool pickBlueCubes = pickaAndPlaceCube(centroids, request.goal_loc.point);
   
   return true;
 }
@@ -593,6 +459,61 @@ Cw1Solution::findCentroidsAtScanLocation(std::vector<geometry_msgs::PointStamped
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+bool
+Cw1Solution::pickaAndPlaceCube(std::vector<geometry_msgs::PointStamped> centroids, geometry_msgs::Point goal_loc)
+{
+
+  /*This function is used to pick and place cubes after centroid  have been found*/
+
+
+   int size = centroids.size();
+
+  //setting a condition to go through all the centroids as long as there are centroids in the list
+  if (size > 0)
+  {
+      //looping through all the centroids
+      for (int i = 0; i < size; i++)
+      {
+        std::cout << "We are now trying to pick cube:  " + std::to_string(i)  << std::endl;;
+        
+        //initializing a variable to store the coordinates of each centroid found
+        geometry_msgs::Point position;
+        position.x = (round(centroids[i].point.x * pow(10.0f, (2.0))) / pow(10.0f, (2.0)));
+        position.y = (round(centroids[i].point.y * pow(10.0f, (2.0))) / pow(10.0f, (2.0)));
+        position.z = 0.02; 
+
+        // function call to pick an object at the desired coordinate
+        bool pick_success = pick(position);
+
+        if (not pick_success) 
+        {
+          ROS_ERROR("Object Pick up  failed");
+
+          return false;
+        }
+
+        // initializing a variable to store the coordinates of the goal location(where the cube is to be placed)
+        geometry_msgs::Point target_point;
+        target_point.x = goal_loc.x;
+        target_point.y = goal_loc.y;
+        target_point.z = goal_loc.z+0.1;
+
+        // Function call to place the object picked inside the basket
+        bool move_success = place(target_point);
+
+        if (not move_success)
+        {
+          ROS_ERROR("Placing the object failed");
+          
+          return false;
+        }
+
+
+      }
+  }
+  return true;
+}
+///////////////////////////////////////////////////////////////////////////////
 geometry_msgs::Pose
 Cw1Solution::scan(geometry_msgs::Pose scan_num, float x, float y, float z)
 {
@@ -610,6 +531,89 @@ Cw1Solution::scan(geometry_msgs::Pose scan_num, float x, float y, float z)
   scan_num.position.z = z;
   
   return scan_num;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+geometry_msgs::Point
+Cw1Solution::origin(geometry_msgs::Point collision_origin, float x, float y, float z)
+{
+  /* This function is used to set coordinate for the origin of collision object */
+  
+  //setting the values for the origin coordinates
+  collision_origin.x = x;
+  collision_origin.y = y;
+  collision_origin.z = z;
+  
+  return collision_origin;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+geometry_msgs::Vector3
+Cw1Solution::dimension(geometry_msgs::Vector3 collision_dimension, float x, float y, float z)
+{
+  /* This function is used to set coordinate for the dimension of collision object*/
+  
+  collision_dimension.x = x;
+  collision_dimension.y = y;
+  collision_dimension.z = z;
+  
+  return collision_dimension;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+geometry_msgs::Quaternion
+Cw1Solution::orientation(geometry_msgs::Quaternion collision_orientation, float x, float y, float z, float w)
+{
+  /* This function is used to set coordinate for the orientation of collision object*/
+  
+  collision_orientation.x = x;
+  collision_orientation.y = y;
+  collision_orientation.z = z;
+  collision_orientation.w = w;
+  
+  return collision_orientation;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+void
+Cw1Solution::addFloorAndBoxCollisionObjects(geometry_msgs::PointStamped goal_loc)
+{
+
+  // this is used in defining the origin of the floor collision object
+  geometry_msgs::Point floor_origin;
+  floor_origin = origin(floor_origin, 0.0, 0.0, 0.0);
+
+  // this is used in defining the dimension of the floor collision object
+  geometry_msgs::Vector3 floor_dimension;
+  floor_dimension = dimension(floor_dimension, 3.0, 3.0, 0.001);
+
+  // this is used in defining the orientation of the floor collision object
+  geometry_msgs::Quaternion floor_orientation;
+  floor_orientation = orientation(floor_orientation, 0.0, 0.0,0.0,1.0);
+
+
+  // function call to add a floor collision object with the arguments defined above/
+  addCollisionObject("cube_1",floor_origin,floor_dimension,floor_orientation);
+
+
+  // this is used in defining the origin of box collision object
+  geometry_msgs::Point box_origin;
+  box_origin = origin(box_origin, goal_loc.point.x, goal_loc.point.y, 0.0);
+
+
+  // this is used in defining the dimension of the box collision object
+  geometry_msgs::Vector3 box_dimension;
+  box_dimension = dimension(box_dimension, 0.22, 0.22, 0.45);
+
+
+  // this is used in defining the orientation of the box collision object
+  geometry_msgs::Quaternion box_orientation;
+  box_orientation = orientation(box_orientation, 0.0, 0.0,0.0,1.0);
+
+
+  // function call to add a box collision object with the arguments defined above
+  addCollisionObject("cube_2",box_origin,box_dimension,box_orientation);
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1048,7 +1052,7 @@ Cw1Solution::segClusters (PointCPtr &in_cloud_ptr)
   g_ec.setClusterTolerance (0.02); // 2cm
   
   //Minimum set so that half cut cubes are not classified as clusters
-  g_ec.setMinClusterSize (500); 
+  g_ec.setMinClusterSize (400); 
   g_ec.setMaxClusterSize (3000);
   g_ec.setSearchMethod (g_tree_ptr);
   g_ec.setInputCloud (in_cloud_ptr);

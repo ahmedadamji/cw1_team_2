@@ -156,6 +156,15 @@ class Cw1Solution
       */
     std::vector<geometry_msgs::PointStamped>
     findCentroidsAtScanLocation(std::vector<geometry_msgs::PointStamped> centroids);
+      
+      /** \brief function to pick and place cube at particular centroid location
+      *
+      * \input[in] list of centroid specifying location to pick
+      * \input[in] goal location
+      * \return true if successful
+      */
+    bool
+    pickaAndPlaceCube(std::vector<geometry_msgs::PointStamped> centroids, geometry_msgs::Point goal_loc);
 
     /** \brief function to specify scan area
       *
@@ -167,7 +176,48 @@ class Cw1Solution
       */
     geometry_msgs::Pose
     scan(geometry_msgs::Pose scan_num, float x, float y, float z);
+
+    /** \brief function to specify collision origin
+      *
+      * \input[in] container to store origin of collision area
+      * \input[in] coordinate x of origin
+      * \input[in] coordinate y of origin
+      * \input[in] coordinate z of origin
+      * \return the coordinate of the origin
+      */
+    geometry_msgs::Point
+    origin(geometry_msgs::Point collision_origin, float x, float y, float z);
+
+    /** \brief function to specify collision object dimension
+      *
+      * \input[in] container to store dimension of collision object
+      * \input[in] length x of dimension
+      * \input[in] breadth y of dimension
+      * \input[in] height z of dimension
+      * \return the dimension of collision object
+      */
+    geometry_msgs::Vector3
+    dimension(geometry_msgs::Vector3 collision_dimension, float x, float y, float z);
+
+    /** \brief function to specify collision object orientation
+      *
+      * \input[in] container to store orientation of collision object
+      * \input[in]  x of orientation
+      * \input[in]  y of orientation
+      * \input[in]  z of orientation
+      * \input[in]  w of orientation
+      * \return the orientation of collision object
+      */
+
+    geometry_msgs::Quaternion
+    orientation(geometry_msgs::Quaternion collision_orientation, float x, float y, float z, float w);
       
+    /** \brief function to add floor and goal box collision objects to avoid collisions.
+      *
+      * \input[in] container to store origin of box at goal location
+      */
+    void
+    addFloorAndBoxCollisionObjects(geometry_msgs::PointStamped goal_loc);
 
     /** \brief MoveIt function for moving the move_group to the target position.
       *

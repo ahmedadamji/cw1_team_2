@@ -1,7 +1,7 @@
 # CW1 - Team 2
 ----------------- 
 
-This is a project focused on **Picking, placing, identifying, and localising simple objects..**
+This is a project focused on **Picking, placing, identifying, and localising simple objects.**
 
 It is authored by **Ahmed Adamjee, Ikedinaekpere Kennedy Dike, and Abdulbaasit Sanusi** and is licensed under the MIT License, see below:
 
