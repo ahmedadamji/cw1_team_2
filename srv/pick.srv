@@ -1,3 +1,0 @@
-geometry_msgs/Point grasp_point
----
-bool success

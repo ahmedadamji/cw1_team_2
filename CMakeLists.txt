@@ -69,14 +69,9 @@ find_package(tf_conversions REQUIRED)
 # )
 
 ## Generate services in the 'srv' folder
-add_service_files(
-  FILES
-  set_arm.srv
-  set_gripper.srv
-  add_collision.srv
-  remove_collision.srv
-  pick.srv
-)
+# add_service_files(
+#   FILES
+# )
 
 ## Generate actions in the 'action' folder
 # add_action_files(
